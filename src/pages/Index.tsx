@@ -1,13 +1,23 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React from 'react';
+import { Hero } from '@/components/sections/Hero';
+import { WhyBlockHaven } from '@/components/sections/WhyBlockHaven';
+import { PopularCoins } from '@/components/sections/PopularCoins';
+import { MarketMovers } from '@/components/sections/MarketMovers';
+import { FAQ } from '@/components/sections/FAQ';
+import { Contact } from '@/components/sections/Contact';
+import { Footer } from '@/components/sections/Footer';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <main className="min-h-screen">
+      <Hero />
+      <WhyBlockHaven />  
+      <PopularCoins />
+      <MarketMovers />
+      <FAQ />
+      <Contact />
+      <Footer />
+    </main>
   );
 };
 
