@@ -97,7 +97,6 @@ export function ExchangeWidget() {
     const currency = allCurrencies.find(c => c.ticker === toCurrency);
     setSelectedToCurrency(currency || null);
     setLeftColor(currency?.color)
-    console.log(currency.color)
   }, [toCurrency, allCurrencies]);
 
   // Minimum amount
