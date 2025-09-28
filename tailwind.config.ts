@@ -71,6 +71,7 @@ export default {
         'gradient-mountain': 'var(--gradient-mountain)',
         'gradient-hero': 'var(--gradient-hero)',
         'gradient-card': 'var(--gradient-card)',
+        'gradient-dark-mountain': 'var(--gradient-dark-mountain)',
       },
       boxShadow: {
         'glow': 'var(--shadow-glow)',

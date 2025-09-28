@@ -43,7 +43,7 @@ const features = [
 
 export function WhyBlockHaven() {
   return (
-    <section className="py-20 bg-gradient-mountain">
+    <section className="py-20 bg-gradient-dark-mountain">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">

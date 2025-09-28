@@ -1,4 +1,5 @@
 import React from 'react';
+import { Header } from '@/components/sections/Header';
 import { Hero } from '@/components/sections/Hero';
 import { WhyBlockHaven } from '@/components/sections/WhyBlockHaven';
 import { PopularCoins } from '@/components/sections/PopularCoins';
@@ -10,6 +11,7 @@ import { Footer } from '@/components/sections/Footer';
 const Index = () => {
   return (
     <main className="min-h-screen">
+      <Header />
       <Hero />
       <WhyBlockHaven />  
       <PopularCoins />
