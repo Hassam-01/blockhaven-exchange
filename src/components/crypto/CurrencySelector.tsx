@@ -17,7 +17,7 @@ export const CurrencySelector = memo(({
   currencies,
   selectedCurrency,
   placeholder = "Select currency",
-  className = "w-full"
+  className = "w-full",
 }: CurrencySelectorProps) => {
   return (
     <Select value={value} onValueChange={onValueChange}>

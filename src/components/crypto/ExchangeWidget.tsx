@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { ArrowUpDown, Zap, Shield, ShoppingCart, DollarSign, Wallet, Copy, Check } from 'lucide-react';
+import { ArrowUpDown, Zap, Shield, ShoppingCart, DollarSign, Wallet, Copy, Check, ArrowRight, ArrowLeft, MoveLeft, MoveRight, CloudCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +31,8 @@ export function ExchangeWidget() {
   const [allCurrencies, setAllCurrencies] = useState<CryptoCurrency[]>([]);
   const [selectedFromCurrency, setSelectedFromCurrency] = useState<CryptoCurrency | null>(null);
   const [selectedToCurrency, setSelectedToCurrency] = useState<CryptoCurrency | null>(null);
+  const [rightColor, setRightColor] = useState(selectedFromCurrency?.color || "")
+  const [leftColor, setLeftColor] = useState(selectedToCurrency?.color || "")
   const [exchangeType, setExchangeType] = useState<'fixed' | 'floating'>('fixed');
   const { toast } = useToast();
 
@@ -61,8 +63,15 @@ export function ExchangeWidget() {
         // Set initial selected currencies
         const btc = currencies.find(c => c.ticker === 'btc');
         const eth = currencies.find(c => c.ticker === 'eth');
-        if (btc) setSelectedFromCurrency(btc);
-        if (eth) setSelectedToCurrency(eth);
+        if (btc) {
+          setSelectedFromCurrency(btc);
+          setRightColor(btc?.color)
+        }
+
+        if (eth) {
+          setSelectedToCurrency(eth);
+          setLeftColor(eth?.color)
+        }
       } catch (error) {
         console.error('Failed to fetch currencies:', error);
         toast({
@@ -80,12 +89,15 @@ export function ExchangeWidget() {
   useEffect(() => {
     const currency = allCurrencies.find(c => c.ticker === fromCurrency);
     setSelectedFromCurrency(currency || null);
+    setRightColor(currency?.color)
   }, [fromCurrency, allCurrencies]);
 
   // Update selected currency when toCurrency changes
   useEffect(() => {
     const currency = allCurrencies.find(c => c.ticker === toCurrency);
     setSelectedToCurrency(currency || null);
+    setLeftColor(currency?.color)
+    console.log(currency.color)
   }, [toCurrency, allCurrencies]);
 
   // Minimum amount
@@ -319,14 +331,22 @@ export function ExchangeWidget() {
 
               {/* Swap Button */}
               <div className="flex items-center justify-center">
-                <Button
+                {/* <Button
                   variant="outline"
                   size="sm"
+                  // className="rounded-full p-2"
+                > */}
+                <div className="flex flex-col items-center rotate-90 md:rotate-0"
                   onClick={handleSwapCurrencies}
-                  className="rounded-full p-2"
                 >
-                  <ArrowUpDown className="w-4 h-4" />
-                </Button>
+                  <MoveLeft className="md:w-7 md:h-7 w-5 h-5 -mb-2" style={{
+                    color: leftColor || "",
+                  }} />
+                  <MoveRight className="md:w-7 md:h-7 w-5 h-5" style={{
+                    color: rightColor || "",
+                  }} />
+                </div>
+                {/* </Button> */}
               </div>
 
               {/* Receive Section */}
