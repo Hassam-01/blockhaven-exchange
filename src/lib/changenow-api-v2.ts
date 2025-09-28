@@ -198,7 +198,7 @@ export interface NetworkFeeEstimate {
 }
 
 // api.ts
-const CHANGENOW_API_BASE = '/api/changenow';
+const CHANGENOW_API_BASE = 'https://api.changenow.io/v2';
 const CHANGENOW_API_KEY = '4d2e85bbf550b94bd9647732dc3b9984ac14b560a1236f8f142fe82f9e8ce583';
 
 // Coin colors and logos mappings
