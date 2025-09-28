@@ -8,11 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { getExchangeEstimate, getMinimumAmount, createExchange, validateAddress, getTransactionStatus, getAvailableCurrencies, type CryptoCurrency, type Transaction } from '@/lib/changenow-api';
-import { CurrencySelector } from './CurrencySelector';
+import { getExchangeEstimate, getMinimumAmount, createExchange, validateAddress, getTransactionStatus, type CryptoCurrency, type Transaction } from '@/lib/changenow-api';
 import { CurrencyInput } from './CurrencyInput';
 import { ExchangeTypeSelector } from './ExchangeTypeSelector';
 import { WalletAddressInput } from './WalletAddressInput';
+import CurrencySelector from './CurrencySelector';
+import { getAvailableCurrencies, type ExchangeCurrency } from '@/lib/changenow-api-v2';
 
 export function ExchangeWidget() {
   const [activeTab, setActiveTab] = useState<'exchange' | 'buy' | 'sell'>('exchange');
@@ -28,9 +29,9 @@ export function ExchangeWidget() {
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false);
   const [showTransactionDialog, setShowTransactionDialog] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-  const [allCurrencies, setAllCurrencies] = useState<CryptoCurrency[]>([]);
-  const [selectedFromCurrency, setSelectedFromCurrency] = useState<CryptoCurrency | null>(null);
-  const [selectedToCurrency, setSelectedToCurrency] = useState<CryptoCurrency | null>(null);
+  const [allCurrencies, setAllCurrencies] = useState<ExchangeCurrency[]>([]);
+  const [selectedFromCurrency, setSelectedFromCurrency] = useState<ExchangeCurrency | null>(null);
+  const [selectedToCurrency, setSelectedToCurrency] = useState<ExchangeCurrency | null>(null);
   const [rightColor, setRightColor] = useState(selectedFromCurrency?.color || "")
   const [leftColor, setLeftColor] = useState(selectedToCurrency?.color || "")
   const [exchangeType, setExchangeType] = useState<'fixed' | 'floating'>('fixed');
@@ -57,20 +58,30 @@ export function ExchangeWidget() {
   useEffect(() => {
     const fetchCurrencies = async () => {
       try {
-        const currencies = await getAvailableCurrencies();
-        setAllCurrencies(currencies);
+        const currencies = await getAvailableCurrencies({
+          active: true,
+          flow: 'standard',
+          buy: true,
+          sell: true
+        });
+        
+        if (currencies) {
+          setAllCurrencies(currencies);
 
-        // Set initial selected currencies
-        const btc = currencies.find(c => c.ticker === 'btc');
-        const eth = currencies.find(c => c.ticker === 'eth');
-        if (btc) {
-          setSelectedFromCurrency(btc);
-          setRightColor(btc?.color)
-        }
+          // Set initial selected currencies
+          const btc = currencies.find(c => c.ticker === 'btc');
+          const eth = currencies.find(c => c.ticker === 'eth');
+          if (btc) {
+            setSelectedFromCurrency(btc);
+            setRightColor(btc.color || '');
+          }
 
-        if (eth) {
-          setSelectedToCurrency(eth);
-          setLeftColor(eth?.color)
+          if (eth) {
+            setSelectedToCurrency(eth);
+            setLeftColor(eth.color || '');
+          }
+        } else {
+          throw new Error('No currencies returned from API');
         }
       } catch (error) {
         console.error('Failed to fetch currencies:', error);
@@ -89,14 +100,14 @@ export function ExchangeWidget() {
   useEffect(() => {
     const currency = allCurrencies.find(c => c.ticker === fromCurrency);
     setSelectedFromCurrency(currency || null);
-    setRightColor(currency?.color)
+    setRightColor(currency?.color || '');
   }, [fromCurrency, allCurrencies]);
 
   // Update selected currency when toCurrency changes
   useEffect(() => {
     const currency = allCurrencies.find(c => c.ticker === toCurrency);
     setSelectedToCurrency(currency || null);
-    setLeftColor(currency?.color)
+    setLeftColor(currency?.color || '');
   }, [toCurrency, allCurrencies]);
 
   // Minimum amount
@@ -338,11 +349,11 @@ export function ExchangeWidget() {
                 <div className="flex flex-col items-center rotate-90 md:rotate-0"
                   onClick={handleSwapCurrencies}
                 >
-                  <MoveLeft className="md:w-7 md:h-7 w-5 h-5 -mb-2" style={{
-                    color: leftColor || "",
-                  }} />
-                  <MoveRight className="md:w-7 md:h-7 w-5 h-5" style={{
+                  <MoveRight className="md:w-7 md:h-7 w-5 h-5 md:-mb-4 -mb-2 md:ml-2 ml-2 " style={{
                     color: rightColor || "",
+                  }} />
+                  <MoveLeft className="md:w-7 md:h-7 w-5 h-5  md:mr-4 " style={{
+                    color: leftColor || "",
                   }} />
                 </div>
                 {/* </Button> */}

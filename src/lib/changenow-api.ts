@@ -71,6 +71,7 @@ export async function getAvailableCurrencies(): Promise<CryptoCurrency[]> {
     const response = await fetch(`${CHANGENOW_API_BASE}/currencies?active=true&api_key=${CHANGENOW_API_KEY}`);
     if (!response.ok) throw new Error('Failed to fetch currencies');
     const currencies = await response.json();
+    // console.log(currencies)
     return currencies.map((currency: any) => ({
       ...currency,
       color: getCoinColor(currency.ticker),
@@ -248,7 +249,7 @@ function getCoinLogo(ticker: string): string {
 // Get exchange estimate
 export async function getExchangeEstimate(
   fromCurrency: string,
-  toCurrency: string, 
+  toCurrency: string,
   amount: string
 ): Promise<ExchangeEstimate | null> {
   try {
@@ -279,6 +280,23 @@ export async function getMinimumAmount(
     return null;
   }
 }
+// Get max exchange amount
+export async function getMaximumAmount(
+  fromCurrency: string,
+  toCurrency: string
+): Promise<{ maxAmount: string } | null> {
+  try {
+    const response = await fetch(
+      `${CHANGENOW_API_BASE}/max-amount/${fromCurrency}_${toCurrency}?api_key=${CHANGENOW_API_KEY}`
+    );
+    if (!response.ok) throw new Error('Failed to get maximum amount');
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting maximum amount:', error);
+    return null;
+  }
+}
+
 
 // Create exchange transaction
 export async function createExchange({

@@ -1,13 +1,13 @@
 import React, { memo } from 'react';
 import { Input } from '@/components/ui/input';
-import { CryptoCurrency } from '@/lib/changenow-api';
+import { ExchangeCurrency } from '@/lib/changenow-api-v2';
 
 interface CurrencyInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   readOnly?: boolean;
-  selectedCurrency: CryptoCurrency | null;
+  selectedCurrency: ExchangeCurrency | null;
   className?: string;
 }
 
