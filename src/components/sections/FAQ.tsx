@@ -43,13 +43,8 @@ const faqs = [
 
 export function FAQ() {
   return (
-    <section id="faq" className="py-20 bg-background bg-pattern-mountain-texture bg-pattern-lg relative overflow-hidden">
-      {/* Subtle mountain range */}
-      <div className="absolute inset-0 opacity-6">
-        <svg className="absolute bottom-0 left-0 w-full h-20" viewBox="0 0 1200 200" fill="none">
-          <path d="M0,200L40,180C80,160,160,120,240,100C320,80,400,80,480,90C560,100,640,120,720,130C800,140,880,140,960,130C1040,120,1120,100,1160,90L1200,80L1200,200L1160,200C1120,200,1040,200,960,200C880,200,800,200,720,200C640,200,560,200,480,200C400,200,320,200,240,200C160,200,80,200,40,200L0,200Z" fill="currentColor"/>
-        </svg>
-      </div>
+    <section id="faq" className="py-20 bg-background relative overflow-hidden">
+
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">

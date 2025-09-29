@@ -8,22 +8,7 @@ export function MarketMovers() {
   const topLosers = getTopLosers();
 
   return (
-    <section id="markets" className="py-20 bg-muted/20 bg-pattern-grid bg-pattern relative overflow-hidden">
-      {/* Subtle tree silhouettes */}
-      <div className="absolute inset-0 opacity-8">
-        <svg className="absolute bottom-0 left-10 w-8 h-24" viewBox="0 0 32 96" fill="none">
-          <rect x="14" y="60" width="4" height="36" fill="currentColor"/>
-          <path d="M16,0L24,20L8,20L16,0ZM16,15L22,30L10,30L16,15ZM16,25L20,40L12,40L16,25Z" fill="currentColor"/>
-        </svg>
-        <svg className="absolute bottom-0 right-32 w-6 h-20" viewBox="0 0 24 80" fill="none">
-          <rect x="10" y="50" width="4" height="30" fill="currentColor"/>
-          <path d="M12,0L18,15L6,15L12,0ZM12,10L16,25L8,25L12,10Z" fill="currentColor"/>
-        </svg>
-        <svg className="absolute bottom-0 left-1/2 w-10 h-28" viewBox="0 0 40 112" fill="none">
-          <rect x="18" y="70" width="4" height="42" fill="currentColor"/>
-          <path d="M20,0L28,25L12,25L20,0ZM20,20L26,40L14,40L20,20ZM20,35L24,50L16,50L20,35Z" fill="currentColor"/>
-        </svg>
-      </div>
+    <section id="markets" className="py-20 bg-muted/20 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">

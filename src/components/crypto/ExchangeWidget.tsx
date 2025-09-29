@@ -341,7 +341,7 @@ export function ExchangeWidget() {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto bg-card backdrop-blur-sm border-border shadow-card
+    <Card className="w-full max-w-4xl mx-auto dark:bg-card bg-gray-200 backdrop-blur-sm border-border shadow-card
                      flex flex-col"
       style={{ minHeight: '350px' }}
     >
