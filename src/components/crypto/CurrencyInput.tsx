@@ -17,7 +17,7 @@ export const CurrencyInput = memo(({
   placeholder = "0.00",
   readOnly = false,
   selectedCurrency,
-  className = "text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
+  className = "text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0 bg-background text-foreground"
 }: CurrencyInputProps) => {
   return (
     <Input

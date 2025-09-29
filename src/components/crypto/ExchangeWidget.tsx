@@ -341,14 +341,14 @@ export function ExchangeWidget() {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card
+    <Card className="w-full max-w-4xl mx-auto bg-card backdrop-blur-sm border-border shadow-card
                      flex flex-col"
       style={{ minHeight: '350px' }}
     >
       <CardContent className="flex-1 flex flex-col pt-4">
         {/* Tabs with active background */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full flex flex-col flex-1">
-          <TabsList className="grid w-full grid-cols-3 relative bg-muted/50 p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-3 relative bg-muted p-1 rounded-lg">
             <TabsTrigger
               value="exchange"
               className="flex items-center gap-2 relative z-10 transition-all duration-200"

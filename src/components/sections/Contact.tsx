@@ -40,9 +40,20 @@ export function Contact() {
   };
 
   return (
-    <section id="contact" className="py-20 bg-gradient-dark-mountain relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-pattern-dots bg-pattern opacity-15"></div>
+    <section id="contact" className="py-20 bg-muted/30 bg-pattern-dots bg-pattern relative overflow-hidden">
+      {/* Subtle combined elements */}
+      <div className="absolute inset-0 opacity-5">
+        <svg className="absolute top-10 right-10 w-24 h-12" viewBox="0 0 96 48" fill="none">
+          <path d="M72,24C72,10.7,61.3,0,48,0S24,10.7,24,24c0,0,0,0,0,0C10.7,24,0,34.7,0,48s10.7,24,24,24h48c13.3,0,24-10.7,24-24S85.3,24,72,24z" fill="currentColor"/>
+        </svg>
+        <svg className="absolute bottom-10 left-20 w-6 h-16" viewBox="0 0 24 64" fill="none">
+          <rect x="10" y="40" width="4" height="24" fill="currentColor"/>
+          <path d="M12,0L18,12L6,12L12,0ZM12,8L16,20L8,20L12,8Z" fill="currentColor"/>
+        </svg>
+        <svg className="absolute bottom-0 right-1/4 w-1/3 h-16" viewBox="0 0 400 128" fill="none">
+          <path d="M0,128L20,120C40,112,80,96,120,90.7C160,85,200,91,240,96C280,101,320,107,360,106.7C380,107,400,101,400,101L400,128L380,128C360,128,320,128,280,128C240,128,200,128,160,128C120,128,80,128,40,128L0,128Z" fill="currentColor"/>
+        </svg>
+      </div>
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">
@@ -59,7 +70,7 @@ export function Contact() {
         <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Contact Information */}
           <div className="space-y-6">
-            <Card className="bg-gradient-card border-primary/10">
+            <Card className="bg-card border-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <MessageCircle className="w-8 h-8 text-primary" />
@@ -74,7 +85,7 @@ export function Contact() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-card border-primary/10">
+            <Card className="bg-card border-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <Mail className="w-8 h-8 text-accent" />
@@ -90,7 +101,7 @@ export function Contact() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-card border-primary/10">
+            <Card className="bg-card border-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <Phone className="w-8 h-8 text-success" />
@@ -109,7 +120,7 @@ export function Contact() {
 
           {/* Contact Form */}
           <div className="lg:col-span-2">
-            <Card className="bg-gradient-card border-primary/10">
+            <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold">Send us a Message</CardTitle>
               </CardHeader>

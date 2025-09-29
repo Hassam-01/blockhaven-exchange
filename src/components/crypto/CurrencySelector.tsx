@@ -42,7 +42,7 @@ export default function CurrencySelector({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        className={`flex items-center justify-between border-2 rounded-md px-3 py-2 text-sm ${className}`}
+        className={`flex items-center justify-between border-2 rounded-md px-3 py-2 text-sm bg-background text-foreground ${className}`}
         style={{
           borderColor: selectedCurrency?.color || "hsl(var(--border))",
         }}
