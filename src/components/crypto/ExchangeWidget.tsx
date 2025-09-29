@@ -507,10 +507,13 @@ export function ExchangeWidget() {
                 required={false}
               />
             </div>
-            <div className="mt-4 flex justify-between">
-              <span className='text-sm text-muted-foreground font-bold flex items-center gap-1 text-orange-500'>
+            <div className="mt-4 flex flex-col-reverse md:flex-row justify-between ">
+              <span className='text-xs mt-1 md:mt-0 md:text-sm text-muted-foreground text-orange-500 text-center md:text-left'>
                 By clicking Exchange now, you agree to the
-                {/* <Link href="/terms" className='text-orange-500'>Terms of Service</Link> and <Link href="/privacy" className='text-orange-500'>Privacy Policy</Link> */}
+                <span className="block md:inline">
+                  {' '}<span className='font-bold text-primary underline cursor-pointer'>Terms & Conditions</span> and{' '}
+                  <span className='font-bold text-primary underline cursor-pointer'>Privacy Policy</span>
+                </span>
               </span>
               {/* Exchange Button */}
               <Button
