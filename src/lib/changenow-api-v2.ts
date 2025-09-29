@@ -1,4 +1,23 @@
-import { AvailablePairsResponse, CreateTransactionResponse, EstimatedAmountResponse, ExchangeCurrency, ExchangeRange, MinAmountResponse, NetworkFeeEstimate, TransactionStatusResponse, UserAddressesResponse, ValidationResponse } from "@/const/types";
+export interface ExchangeCurrency {
+  ticker: string;
+  name: string;
+  image: string;
+  hasExternalId: boolean;
+  isFiat: boolean;
+  featured: boolean;
+  isStable: boolean;
+  supportsFixedRate: boolean;
+  network: string;
+  tokenContract: string | null;
+  buy: boolean;
+  sell: boolean;
+  legacyTicker: string;
+  isExtraIdSupported: boolean;
+  color?: string;
+  logo?: string;
+}
+
+import { AvailablePairsResponse, CreateTransactionResponse, EstimatedAmountResponse, ExchangeRange, MinAmountResponse, NetworkFeeEstimate, TransactionStatusResponse, UserAddressesResponse, ValidationResponse } from "@/const/types";
 import { toast } from "@/hooks/use-toast";
 
 const CHANGENOW_API_BASE = 'https://api.changenow.io/v2';
@@ -88,8 +107,20 @@ export async function getAvailableCurrencies(
                 // Add new currency with color and logo
                 acc.push({
                     ...currency,
+                    image: currency?.image || '',
+                    hasExternalId: currency?.hasExternalId || false,
+                    isFiat: currency?.isFiat || false,
+                    featured: currency?.featured || false,
+                    isStable: currency?.isStable || false,
+                    supportsFixedRate: currency?.supportsFixedRate || false,
+                    network: currency?.network || '',
+                    tokenContract: currency?.tokenContract || null,
+                    buy: currency?.buy || false,
+                    sell: currency?.sell || false,
+                    legacyTicker: currency?.legacyTicker || '',
+                    isExtraIdSupported: currency?.isExtraIdSupported || false,
                     color: getCoinColor(currency.ticker),
-                    logo: currency?.image
+                    logo: currency?.image || ''
                 });
             } else {
                 // Update existing currency if this one is more featured or has better properties
@@ -97,8 +128,20 @@ export async function getAvailableCurrencies(
                 if (currency.featured && !existing.featured) {
                     acc[existingIndex] = {
                         ...currency,
+                        image: currency?.image || '',
+                        hasExternalId: currency?.hasExternalId || false,
+                        isFiat: currency?.isFiat || false,
+                        featured: currency?.featured || false,
+                        isStable: currency?.isStable || false,
+                        supportsFixedRate: currency?.supportsFixedRate || false,
+                        network: currency?.network || '',
+                        tokenContract: currency?.tokenContract || null,
+                        buy: currency?.buy || false,
+                        sell: currency?.sell || false,
+                        legacyTicker: currency?.legacyTicker || '',
+                        isExtraIdSupported: currency?.isExtraIdSupported || false,
                         color: getCoinColor(currency.ticker),
-                        logo: currency?.image
+                        logo: currency?.image || ''
                     };
                 }
             }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,11 +10,19 @@ export function Header() {
 
   const navigation = [
     { name: 'Exchange', href: '#exchange' },
+    { name: 'Why BlockHaven', href: '#why-blockhaven' },
     { name: 'Markets', href: '#markets' },
-    { name: 'About', href: '#about' },
     { name: 'FAQ', href: '#faq' },
     { name: 'Contact', href: '#contact' }
   ];
+
+  const handleNavClick = (href: string) => {
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -31,14 +40,19 @@ export function Header() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => (
-              <a
+              <button
                 key={item.name}
-                href={item.href}
+                onClick={() => handleNavClick(item.href)}
                 className="text-muted-foreground hover:text-primary transition-colors duration-200 font-medium"
               >
                 {item.name}
-              </a>
+              </button>
             ))}
+          </div>
+
+          {/* Desktop CTA & Theme Toggle */}
+          <div className="hidden md:flex items-center space-x-4">
+            <ThemeToggle />
           </div>
 
           {/* Desktop CTA */}
@@ -52,8 +66,9 @@ export function Header() {
             </Button>
           </div> */}
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Mobile menu button & Theme Toggle */}
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={toggleMenu}>
               {isMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -69,14 +84,13 @@ export function Header() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-card/95 backdrop-blur-md border border-border rounded-lg mt-2 mb-2">
               {navigation.map((item) => (
-                <a
+                <button
                   key={item.name}
-                  href={item.href}
-                  className="block px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-md transition-colors duration-200 font-medium"
-                  onClick={toggleMenu}
+                  onClick={() => handleNavClick(item.href)}
+                  className="block w-full text-left px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-md transition-colors duration-200 font-medium"
                 >
                   {item.name}
-                </a>
+                </button>
               ))}
               {/* <div className="px-3 py-2 space-y-2">
                 <Button variant="ghost" size="sm" className="w-full justify-start">

@@ -72,6 +72,13 @@ export default {
         'gradient-hero': 'var(--gradient-hero)',
         'gradient-card': 'var(--gradient-card)',
         'gradient-dark-mountain': 'var(--gradient-dark-mountain)',
+        'pattern-dots': 'var(--pattern-dots)',
+        'pattern-grid': 'var(--pattern-grid)',
+        'pattern-mountain-texture': 'var(--pattern-mountain-texture)',
+      },
+      backgroundSize: {
+        'pattern': '20px 20px',
+        'pattern-lg': '40px 40px',
       },
       boxShadow: {
         'glow': 'var(--shadow-glow)',

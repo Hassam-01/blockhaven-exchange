@@ -43,8 +43,10 @@ const faqs = [
 
 export function FAQ() {
   return (
-    <section className="py-20 bg-gradient-dark-mountain">
-      <div className="container mx-auto px-4">
+    <section id="faq" className="py-20 bg-gradient-dark-mountain relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-pattern-mountain-texture bg-pattern-lg opacity-20"></div>
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">
             Frequently Asked{' '}
