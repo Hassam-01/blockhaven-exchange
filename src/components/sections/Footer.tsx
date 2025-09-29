@@ -6,7 +6,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-gradient-mountain border-t border-primary/20">
+    <footer className="relative border-t border-primary/20">
       {/* Cloud-like shapes */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute bottom-0 left-0 w-32 h-16 bg-white/5 rounded-full blur-xl"></div>

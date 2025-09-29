@@ -1,203 +1,6 @@
-export type AvailablePairsResponse = string[]; // array of underscore-separated pairs, e.g. "btc_usdt"
+import { AvailablePairsResponse, CreateTransactionResponse, EstimatedAmountResponse, ExchangeCurrency, ExchangeRange, MinAmountResponse, NetworkFeeEstimate, TransactionStatusResponse, UserAddressesResponse, ValidationResponse } from "@/const/types";
+import { toast } from "@/hooks/use-toast";
 
-export interface MinAmountResponse {
-    minAmount: number;
-}
-
-export interface ExchangeCurrency {
-    ticker: string;
-    name: string;
-    image: string;
-    hasExternalId: boolean;
-    isExtraIdSupported: boolean;
-    isFiat: boolean;
-    featured: boolean;
-    isStable: boolean;
-    supportsFixedRate: boolean;
-    network: string;
-    tokenContract: string | null;
-    buy: boolean;
-    sell: boolean;
-    legacyTicker: string;
-    color?: string;
-    logo?: string;
-}
-
-export interface UserAddress {
-    currency: string;
-    chain: string;
-    address: string;
-    protocol: string;
-}
-
-export interface UserAddressesResponse {
-    success: boolean;
-    addresses: UserAddress[];
-}
-
-export interface EstimatedAmountResponse {
-    fromAmount: number;
-    toAmount: number;
-    flow: string;
-}
-
-export interface CreateTransactionResponse {
-    id: string;
-    payinAddress: string;
-    payoutAddress: string;
-    payoutExtraId?: string;
-    fromCurrency: string;
-    toCurrency: string;
-    fromAmount: number;
-    toAmount: number;
-    fromNetwork?: string;
-    toNetwork?: string;
-    flow: 'standard' | 'fixed-rate';
-    type: 'direct' | 'reverse';
-    rate: number;
-    rateId?: string;
-    validUntil: string;
-    depositFee?: number;
-    withdrawalFee?: number;
-    transactionFee?: number;
-    userId?: string;
-    payload?: Record<string, string>;
-    contactEmail?: string;
-    refundAddress?: string;
-    refundExtraId?: string;
-    createdAt: string;
-    kycRequired?: boolean;
-    isUniqueAddress: boolean;
-    warningMessage?: string;
-    depositMaxLimit?: number;
-    depositMinLimit?: number;
-}
-
-export interface TransactionStatusResponse {
-    id: string;
-    status:
-    | 'new'
-    | 'waiting'
-    | 'confirming'
-    | 'exchanging'
-    | 'sending'
-    | 'finished'
-    | 'failed'
-    | 'refunded'
-    | 'verifying'
-    | 'expired';
-    statusCode?: number;
-    payinAddress: string;
-    payoutAddress: string;
-    payoutExtraId?: string;
-    fromCurrency: string;
-    toCurrency: string;
-    fromAmount: number;
-    toAmount: number;
-    fromNetwork?: string;
-    toNetwork?: string;
-    expectedAmountFrom?: number;
-    expectedAmountTo?: number;
-    amountFrom?: number;
-    amountTo?: number;
-    rate?: number;
-    rateType?: 'fixed' | 'float';
-    depositReceived?: boolean;
-    depositReceivedAmount?: number;
-    payinHash?: string;
-    payoutHash?: string;
-    refundHash?: string;
-    kycRequired?: boolean;
-    kycStatus?: 'not-submitted' | 'in-progress' | 'rejected' | 'approved';
-    created_at: string;
-    updated_at: string;
-    depositFee?: number;
-    withdrawalFee?: number;
-    transactionFee?: number;
-    depositMaxLimit?: number;
-    depositMinLimit?: number;
-    validUntil: string;
-    userId?: string;
-    isUniqueAddress: boolean;
-    refundAddress?: string;
-    refundExtraId?: string;
-    contactEmail?: string;
-    error?: string;
-    warningMessage?: string;
-    transactionId?: string;
-    networkFee?: {
-        deposit: {
-            currency: string;
-            network: string;
-            amount: number;
-        };
-        withdrawal: {
-            currency: string;
-            network: string;
-            amount: number;
-        };
-    };
-}
-
-export interface TransactionStatusHistory {
-    status: string;
-    statusCode: number;
-    createdAt: string;
-}
-
-export interface TransactionEstimatedAmount {
-    fromAmount: number;
-    toAmount: number;
-    rate: number;
-    rateId?: string;
-    validUntil: string;
-    transactionSpeedForecast?: string;
-    warningMessage?: string;
-    depositFee?: number;
-    withdrawalFee?: number;
-    networkFee?: NetworkFeeEstimate;
-}
-export interface ValidationResponse {
-    result: boolean;
-    message: string | null;
-    isActivated: boolean;
-}
-
-export interface NetworkFeeEstimate {
-    estimatedFee: {
-        deposit: {
-            currency: string;
-            network: string;
-            amount: number;
-        };
-        withdrawal: {
-            currency: string;
-            network: string;
-            amount: number;
-        };
-        totals: {
-            from: {
-                currency: string;
-                network: string;
-                amount: number;
-            };
-            to: {
-                currency: string;
-                network: string;
-                amount: number;
-            };
-        };
-        converted: {
-            currency: string;
-            network: string;
-            deposit: number;
-            withdrawal: number;
-            total: number;
-        };
-    };
-}
-
-// api.ts
 const CHANGENOW_API_BASE = 'https://api.changenow.io/v2';
 const CHANGENOW_API_KEY = '4d2e85bbf550b94bd9647732dc3b9984ac14b560a1236f8f142fe82f9e8ce583';
 
@@ -363,7 +166,7 @@ export async function getMinimalExchangeAmount(
         if (options?.fromNetwork) params.append('fromNetwork', options.fromNetwork);
         if (options?.toNetwork) params.append('toNetwork', options.toNetwork);
         if (options?.flow) params.append('flow', options.flow);
-        console.log("p: ",params)
+        // console.log("p: ", params)
         const response = await fetch(
             `${CHANGENOW_API_BASE}/exchange/min-amount?${params.toString()}`,
             {
@@ -395,32 +198,23 @@ export async function getEstimatedExchangeAmount(
         useRateId?: boolean;
         isTopUp?: boolean;
     }
-): Promise<EstimatedAmountResponse | null> {
-    try {
-        const params = new URLSearchParams({
-            fromCurrency,
-            toCurrency,
-        });
+): Promise<EstimatedAmountResponse> {
+    const params = new URLSearchParams({ fromCurrency, toCurrency });
+    Object.entries(options).forEach(([k, v]) => v !== undefined && params.append(k, String(v)));
 
-        Object.entries(options).forEach(([key, value]) => {
-            if (value !== undefined) {
-                params.append(key, String(value));
-            }
-        });
+    const res = await fetch(
+        `${CHANGENOW_API_BASE}/exchange/estimated-amount?${params.toString()}`,
+        { headers: { 'x-changenow-api-key': CHANGENOW_API_KEY } }
+    );
 
-        const response = await fetch(
-            `${CHANGENOW_API_BASE}/exchange/estimated-amount?${params.toString()}`,
-            {
-                headers: { 'x-changenow-api-key': CHANGENOW_API_KEY },
-            }
-        );
+    const data = await res.json();
 
-        if (!response.ok) throw new Error('Failed to fetch estimated amount');
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching estimated exchange amount:', error);
-        return null;
+    if (!res.ok) {
+        const message = data?.message ?? 'Failed to fetch estimated amount';
+        throw new Error(message);
     }
+
+    return data as EstimatedAmountResponse;
 }
 
 /**
@@ -504,12 +298,10 @@ export async function validateAddress(
 ): Promise<ValidationResponse | null> {
     try {
         const params = new URLSearchParams({ currency, address });
-
+        // console.log("Print address: ", `${CHANGENOW_API_BASE}/validate/address?${params.toString()}`,
+        // )
         const response = await fetch(
             `${CHANGENOW_API_BASE}/validate/address?${params.toString()}`,
-            {
-                headers: { 'x-changenow-api-key': CHANGENOW_API_KEY },
-            }
         );
 
         if (!response.ok) throw new Error('Failed to validate address');
@@ -588,6 +380,46 @@ export async function getEstimatedNetworkFee(
         return await response.json();
     } catch (error) {
         console.error('Error fetching network fee estimate:', error);
+        return null;
+    }
+}
+
+export async function getExchangeRange(
+    fromCurrency: string,
+    toCurrency: string,
+    options?: {
+        fromNetwork?: string;
+        toNetwork?: string;
+        flow?: "standard" | "fixed-rate";
+    }
+): Promise<ExchangeRange | null> {
+    try {
+        const params = new URLSearchParams({
+            fromCurrency,
+            toCurrency,
+        });
+
+        if (options?.fromNetwork) params.append('fromNetwork', options.fromNetwork);
+        if (options?.toNetwork) params.append('toNetwork', options.toNetwork);
+        if (options?.flow) params.append('flow', options.flow);
+
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/exchange/range?${params.toString()}`,
+            {
+                headers: { 'x-changenow-api-key': CHANGENOW_API_KEY },
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                console.error('Unauthorized: Please contact partners@changenow.io for access to this endpoint');
+            }
+            throw new Error('Failed to fetch exchange range');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching exchange range:', error);
         return null;
     }
 }

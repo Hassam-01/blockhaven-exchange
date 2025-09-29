@@ -1,28 +1,26 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { ArrowUpDown, Zap, Shield, ShoppingCart, DollarSign, Wallet, Copy, Check, ArrowRight, ArrowLeft, MoveLeft, MoveRight, CloudCog } from 'lucide-react';
+import { ArrowUpDown, Zap, Shield, ShoppingCart, DollarSign, Copy, Check, ArrowRight, ArrowLeft, MoveLeft, MoveRight, CloudCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  getAvailableCurrencies, 
-  getEstimatedExchangeAmount, 
-  getMinimalExchangeAmount, 
-  createExchangeTransaction, 
-  validateAddress, 
+import {
+  getAvailableCurrencies,
+  getEstimatedExchangeAmount,
+  getMinimalExchangeAmount,
+  createExchangeTransaction,
+  validateAddress,
   getTransactionStatus,
-  type ExchangeCurrency,
-  type CreateTransactionResponse,
-  type TransactionStatusResponse 
+  getExchangeRange,
 } from '@/lib/changenow-api-v2';
 import { CurrencyInput } from './CurrencyInput';
 import { ExchangeTypeSelector } from './ExchangeTypeSelector';
 import { WalletAddressInput } from './WalletAddressInput';
 import CurrencySelector from './CurrencySelector';
+import { CreateTransactionResponse, ExchangeCurrency } from '@/const/types';
 
 export function ExchangeWidget() {
   const [activeTab, setActiveTab] = useState<'exchange' | 'buy' | 'sell'>('exchange');
@@ -75,7 +73,7 @@ export function ExchangeWidget() {
           buy: true,
           sell: true
         });
-        
+
         if (currencies) {
           setAllCurrencies(currencies);
 
@@ -126,29 +124,18 @@ export function ExchangeWidget() {
     const fetchAmountLimits = async () => {
       if (fromCurrency && toCurrency) {
         try {
-          const minResult = await getMinimalExchangeAmount(fromCurrency, toCurrency, {
+          // const minResult = await getMinimalExchangeAmount(fromCurrency, toCurrency, {
+          //   flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard'
+          // });
+          const range = await getExchangeRange(fromCurrency, toCurrency, {
             flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard'
-          });
-          
-          if (minResult) {
-            setMinAmount(minResult.minAmount.toString());
+          })
+          console.log("from raneg: ", range)
+          if (range) {
+            setMinAmount(range.minAmount.toString());
           }
-
-          // For max amount, we'll use a large estimate to find practical limits
-          try {
-            const maxResult = await getEstimatedExchangeAmount(fromCurrency, toCurrency, {
-              fromAmount: 1000000, // Large amount to test limits
-              flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard',
-              type: 'direct'
-            });
-            
-            if (maxResult) {
-              // Set a reasonable max based on the exchange's capabilities
-              setMaxAmount('1000000'); // Default large amount
-            }
-          } catch (error) {
-            // If large amount fails, set a conservative max
-            setMaxAmount('100000');
+          if (range.maxAmount) {
+            setMaxAmount(range.maxAmount.toString());
           }
         } catch (error) {
           console.error('Error fetching amount limits:', error);
@@ -164,52 +151,40 @@ export function ExchangeWidget() {
     const performEstimate = async () => {
       if (!fromCurrency || !toCurrency) return;
 
-      if (calculationType === 'direct' && fromAmount && parseFloat(fromAmount) > 0) {
-        setIsLoading(true);
-        try {
-          const result = await getEstimatedExchangeAmount(fromCurrency, toCurrency, {
-            fromAmount: parseFloat(fromAmount),
-            flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard',
-            type: 'direct'
-          });
-          
-          if (result) {
-            setToAmount(result.toAmount.toString());
-          }
-        } catch (error) {
-          console.error('Error estimating amount:', error);
-          setToAmount('');
-        } finally {
-          setIsLoading(false);
-        }
-      } else if (calculationType === 'reverse' && toAmount && parseFloat(toAmount) > 0) {
-        setIsLoading(true);
-        try {
-          const result = await getEstimatedExchangeAmount(fromCurrency, toCurrency, {
-            toAmount: parseFloat(toAmount),
-            flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard',
-            type: 'reverse'
-          });
-          
-          if (result) {
-            setFromAmount(result.fromAmount.toString());
-          }
-        } catch (error) {
-          console.error('Error estimating reverse amount:', error);
-          setFromAmount('');
-        } finally {
-          setIsLoading(false);
-        }
-      } else if (calculationType === 'direct') {
-        setToAmount('');
-      } else {
-        setFromAmount('');
+      const amount = calculationType === 'direct'
+        ? parseFloat(fromAmount)
+        : parseFloat(toAmount);
+
+      if (!amount || amount <= 0) {
+        calculationType === 'direct' ? setToAmount('') : setFromAmount('');
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const result = await getEstimatedExchangeAmount(fromCurrency, toCurrency, {
+          [calculationType === 'direct' ? 'fromAmount' : 'toAmount']: amount,
+          flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard',
+          type: calculationType
+        });
+
+        calculationType === 'direct'
+          ? setToAmount(result.toAmount?.toString() ?? '')
+          : setFromAmount(result.fromAmount?.toString() ?? '');
+      } catch (err) {
+        console.error('Error estimating amount:', err);
+        toast({
+          title: 'Error Estimating',
+          description: err instanceof Error ? err.message : 'Unknown error',
+        });
+        calculationType === 'direct' ? setToAmount('') : setFromAmount('');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    const timeoutId = setTimeout(performEstimate, 300); // Debounce
-    return () => clearTimeout(timeoutId);
-  }, [fromAmount, toAmount, fromCurrency, toCurrency, exchangeType, calculationType]);
+    performEstimate();
+  }, [fromCurrency, toCurrency, fromAmount, toAmount, calculationType, exchangeType]);
 
   const handleSwapCurrencies = useCallback(() => {
     setFromCurrency(toCurrency);
@@ -224,11 +199,18 @@ export function ExchangeWidget() {
   }, [fromCurrency, toCurrency, fromAmount, toAmount, calculationType]);
 
   const handleFromCurrencyChange = useCallback((value: string) => {
+    if (toCurrency === value) {
+      setToCurrency(fromCurrency)
+    }
     setFromCurrency(value);
   }, []);
 
   const handleToCurrencyChange = useCallback((value: string) => {
+    if (fromCurrency === value) {
+      setFromCurrency(toCurrency)
+    }
     setToCurrency(value);
+
   }, []);
 
   const handleCopyAddress = async (address: string) => {

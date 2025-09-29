@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Input } from '@/components/ui/input';
-import { ExchangeCurrency } from '@/lib/changenow-api-v2';
+import { ExchangeCurrency } from '@/const/types';
 
 interface CurrencyInputProps {
   value: string;
