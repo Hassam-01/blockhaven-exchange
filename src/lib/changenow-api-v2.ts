@@ -363,7 +363,7 @@ export async function getMinimalExchangeAmount(
         if (options?.fromNetwork) params.append('fromNetwork', options.fromNetwork);
         if (options?.toNetwork) params.append('toNetwork', options.toNetwork);
         if (options?.flow) params.append('flow', options.flow);
-
+        console.log("p: ",params)
         const response = await fetch(
             `${CHANGENOW_API_BASE}/exchange/min-amount?${params.toString()}`,
             {

@@ -1,53 +1,79 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, Shield, Zap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExchangeWidget } from '@/components/crypto/ExchangeWidget';
 import mountainBg from '@/assets/mountain-bg.png';
 
 export function Hero() {
+  const [currentWord, setCurrentWord] = useState(0);
+  const [displayText, setDisplayText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const words = ['Reliable', 'Secure', 'Swift'];
+  const wordColors = [
+    'from-blue-500 to-cyan-400',
+    'from-green-500 to-emerald-400', 
+    'from-purple-500 to-pink-400'
+  ];
+
+  useEffect(() => {
+    const current = words[currentWord];
+    const colorClass = wordColors[currentWord];
+    
+    if (!isDeleting) {
+      // Typing effect
+      if (displayText.length < current.length) {
+        const timeout = setTimeout(() => {
+          setDisplayText(current.slice(0, displayText.length + 1));
+        }, 50);
+        return () => clearTimeout(timeout);
+      } else {
+        // Wait before starting to delete
+        const timeout = setTimeout(() => setIsDeleting(true), 2000);
+        return () => clearTimeout(timeout);
+      }
+    } else {
+      // Deleting effect
+      if (displayText.length > 0) {
+        const timeout = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1));
+        }, 50);
+        return () => clearTimeout(timeout);
+      } else {
+        // Move to next word after deleting
+        setIsDeleting(false);
+        setCurrentWord((prev) => (prev + 1) % words.length);
+      }
+    }
+  }, [displayText, currentWord, isDeleting]);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
         style={{ backgroundImage: `url(${mountainBg})` }}
-      >
-        {/* <div className="absolute inset-0 bg-gradient-mountain opacity-70" /> */}
-      </div>
+      />
       
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-20">
         <div className="text-center mb-12">
           <h1 className="text-3xl lg:text-5xl font-bold mb-6">
-            {/* <span className="bg-gradient-primary bg-clip-text text-transparent">
-              BlockHaven
-            </span>
-            <br /> */}
             <span className="text-foreground">
-              Secure Crypto Exchange
+              <span 
+                className={`bg-gradient-to-r ${wordColors[currentWord]} bg-clip-text text-transparent`}
+              >
+                {displayText}
+              </span>
+              {!isDeleting && displayText.length === words[currentWord].length && (
+                <span className="animate-pulse"></span>
+              )}
+              {(isDeleting || displayText.length < words[currentWord].length) && (
+                <span className="animate-pulse"></span>
+              )}{' '}
+              Crypto Exchange
             </span>
           </h1>
-          
-          {/* <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Trade, buy, and sell 300+ cryptocurrencies with instant exchanges, competitive rates, 
-            and enterprise-grade security. Your gateway to the digital asset universe.
-          </p> */}
-          
-          {/* Features */}
-          {/* <div className="flex flex-wrap gap-6 mb-12 justify-center">
-            <div className="flex items-center gap-2 text-foreground">
-              <Shield className="w-5 h-5 text-success" />
-              <span className="font-medium">Bank-Grade Security</span>
-            </div>
-            <div className="flex items-center gap-2 text-foreground">
-              <Zap className="w-5 h-5 text-warning" />
-              <span className="font-medium">Instant Exchanges</span>
-            </div>
-            <div className="flex items-center gap-2 text-foreground">
-              <Users className="w-5 h-5 text-primary" />
-              <span className="font-medium">50K+ Users</span>
-            </div>
-          </div> */}
         </div>
         
         {/* Centered Exchange Widget */}

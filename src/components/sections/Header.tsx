@@ -17,7 +17,7 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-6">
         <nav className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
@@ -42,7 +42,7 @@ export function Header() {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* <div className="hidden md:flex items-center space-x-4">
             <Button variant="ghost" size="sm">
               Sign In
             </Button>
@@ -50,7 +50,7 @@ export function Header() {
               Start Trading
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
-          </div>
+          </div> */}
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -78,7 +78,7 @@ export function Header() {
                   {item.name}
                 </a>
               ))}
-              <div className="px-3 py-2 space-y-2">
+              {/* <div className="px-3 py-2 space-y-2">
                 <Button variant="ghost" size="sm" className="w-full justify-start">
                   Sign In
                 </Button>
@@ -86,7 +86,7 @@ export function Header() {
                   Start Trading
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
-              </div>
+              </div> */}
             </div>
           </div>
         )}
