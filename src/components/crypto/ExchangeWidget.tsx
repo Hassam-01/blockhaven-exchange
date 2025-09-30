@@ -165,7 +165,6 @@ export function ExchangeWidget() {
           const range = await getExchangeRange(fromCurrency, toCurrency, {
             flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
           });
-          console.log("from raneg: ", range);
           if (range) {
             setMinAmount(range.minAmount.toString());
           }

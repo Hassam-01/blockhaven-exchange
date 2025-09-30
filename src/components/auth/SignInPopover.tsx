@@ -45,7 +45,7 @@ export function SignInPopover({ children }: SignInPopoverProps) {
     password: "",
     first_name: "",
     last_name: "",
-    user_type: "customer",
+    user_type: "admin",
   });
   const [confirmPassword, setConfirmPassword] = useState("");
 

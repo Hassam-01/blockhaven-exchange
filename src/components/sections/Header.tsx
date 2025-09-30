@@ -67,7 +67,6 @@ export function Header() {
   const navigation = [
     { name: "Exchange", href: "#exchange" },
     { name: "Why BlockHaven", href: "#why-blockhaven" },
-    { name: "Markets", href: "#markets" },
     { name: "FAQ", href: "#faq" },
     { name: "Contact", href: "#contact" },
   ];
