@@ -39,20 +39,6 @@ export function Footer() {
                 size="icon"
                 className="hover:text-primary text-muted-foreground"
               >
-                <Github className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:text-primary text-muted-foreground"
-              >
-                <Linkedin className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:text-primary text-muted-foreground"
-              >
                 <Mail className="w-5 h-5" />
               </Button>
             </div>

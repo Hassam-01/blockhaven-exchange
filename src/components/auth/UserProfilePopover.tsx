@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, LogOut, Settings, CreditCard } from 'lucide-react';
+import { User, LogOut, Settings, CreditCard, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { User as UserType } from '@/lib/user-services-api';
@@ -7,15 +7,23 @@ import type { User as UserType } from '@/lib/user-services-api';
 interface UserProfilePopoverProps {
   user: UserType;
   onLogout: () => void;
+  onDashboard?: () => void;
 }
 
-export function UserProfilePopover({ user, onLogout }: UserProfilePopoverProps) {
+export function UserProfilePopover({ user, onLogout, onDashboard }: UserProfilePopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
     onLogout();
+    setIsOpen(false);
+  };
+
+  const handleDashboard = () => {
+    if (onDashboard) {
+      onDashboard();
+    }
     setIsOpen(false);
   };
 
@@ -59,6 +67,18 @@ export function UserProfilePopover({ user, onLogout }: UserProfilePopoverProps) 
 
           {/* Menu Items */}
           <div className="py-2 space-y-1">
+            {user.user_type === 'admin' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-3 h-9"
+                onClick={handleDashboard}
+              >
+                <Shield className="h-4 w-4" />
+                Admin Dashboard
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="sm"

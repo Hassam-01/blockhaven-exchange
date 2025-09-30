@@ -267,7 +267,7 @@ export const bulkRejectTestimonials = async (
 
 export const updateServiceFeeConfig = async (
   token: string,
-  data: SetServiceFeeRequest
+  data: { type: 'fixed-rate' | 'floating'; percentage: number }
 ): Promise<ServiceFeeConfig> => {
   return apiCall<ServiceFeeConfig>(API_CONFIG.ENDPOINTS.SERVICE_FEES.BASE, {
     method: HTTP_METHODS.PUT,
@@ -278,24 +278,16 @@ export const updateServiceFeeConfig = async (
 
 export const setFloatingRate = async (
   token: string,
-  data: SetServiceFeeRequest
+  data: { percentage: number }
 ): Promise<ServiceFeeConfig> => {
-  return apiCall<ServiceFeeConfig>(API_CONFIG.ENDPOINTS.SERVICE_FEES.SET_FLOATING, {
-    method: HTTP_METHODS.POST,
-    headers: getAuthHeaders(token),
-    body: JSON.stringify(data),
-  });
+  return updateServiceFeeConfig(token, { type: 'floating', percentage: data.percentage });
 };
 
 export const setFixedRate = async (
   token: string,
-  data: SetServiceFeeRequest
+  data: { percentage: number }
 ): Promise<ServiceFeeConfig> => {
-  return apiCall<ServiceFeeConfig>(API_CONFIG.ENDPOINTS.SERVICE_FEES.SET_FIXED, {
-    method: HTTP_METHODS.POST,
-    headers: getAuthHeaders(token),
-    body: JSON.stringify(data),
-  });
+  return updateServiceFeeConfig(token, { type: 'fixed-rate', percentage: data.percentage });
 };
 
 export const getServiceFeeHistory = async (token: string): Promise<ServiceFeeHistory[]> => {
@@ -310,6 +302,24 @@ export const getServiceFeeStats = async (token: string): Promise<ServiceFeeStats
     method: HTTP_METHODS.GET,
     headers: getAuthHeaders(token),
   });
+};
+
+export const getCurrentServiceFeeConfig = async (token: string): Promise<ServiceFeeConfig> => {
+  return apiCall<ServiceFeeConfig>(API_CONFIG.ENDPOINTS.SERVICE_FEES.BASE, {
+    method: HTTP_METHODS.GET,
+    headers: getAuthHeaders(token),
+  });
+};
+
+// Legacy functions for backward compatibility - now use the unified config
+export const getCurrentFixedRate = async (token: string): Promise<{ percentage: number }> => {
+  const config = await getCurrentServiceFeeConfig(token);
+  return { percentage: config.percentage || 0 };
+};
+
+export const getCurrentFloatingRate = async (token: string): Promise<{ percentage: number }> => {
+  const config = await getCurrentServiceFeeConfig(token);
+  return { percentage: config.percentage || 0 };
 };
 
 export const resetServiceFeeConfig = async (

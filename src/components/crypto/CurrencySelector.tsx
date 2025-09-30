@@ -100,7 +100,7 @@ export default function CurrencySelector({
                 No currencies found
               </div>
             )}
-            {filtered.map(c => (
+            {filtered?.map(c => (
               <CommandItem
                 key={c.ticker}
                 onSelect={() => {

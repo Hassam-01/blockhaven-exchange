@@ -6,7 +6,11 @@ import { SignInPopover } from "@/components/auth/SignInPopover";
 import { UserProfilePopover } from "@/components/auth/UserProfilePopover";
 import type { User } from "@/lib/user-services-api";
 
-export function Header() {
+interface HeaderProps {
+  onDashboardOpen?: () => void;
+}
+
+export function Header({ onDashboardOpen }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,7 +98,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => (
+            {navigation?.map((item) => (
               <button
                 key={item.name}
                 onClick={() => handleNavClick(item.href)}
@@ -109,7 +113,11 @@ export function Header() {
           <div className="hidden md:flex items-center space-x-4">
             {!isLoading &&
               (user ? (
-                <UserProfilePopover user={user} onLogout={handleLogout} />
+                <UserProfilePopover 
+                  user={user} 
+                  onLogout={handleLogout}
+                  onDashboard={onDashboardOpen}
+                />
               ) : (
                 <SignInPopover>
                   <Button variant="ghost" size="sm">
@@ -137,7 +145,7 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-card/95 backdrop-blur-md border border-border rounded-lg mt-2 mb-2">
-              {navigation.map((item) => (
+              {navigation?.map((item) => (
                 <button
                   key={item.name}
                   onClick={() => handleNavClick(item.href)}
@@ -149,7 +157,11 @@ export function Header() {
               <div className="px-3 py-2 space-y-2">
                 {!isLoading &&
                   (user ? (
-                    <UserProfilePopover user={user} onLogout={handleLogout} />
+                    <UserProfilePopover 
+                      user={user} 
+                      onLogout={handleLogout}
+                      onDashboard={onDashboardOpen}
+                    />
                   ) : (
                     <SignInPopover>
                       <Button

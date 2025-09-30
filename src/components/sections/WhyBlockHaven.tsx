@@ -60,7 +60,7 @@ export function WhyBlockHaven() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
+          {features?.map((feature, index) => (
             <Card key={index} className="bg-card border-border hover:border-primary/30 transition-all duration-300 hover:shadow-card group">
               <CardContent className="p-8 text-center">
                 <feature.icon className={`w-12 h-12 mx-auto mb-6 ${feature.color} group-hover:scale-110 transition-transform duration-300`} />
