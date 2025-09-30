@@ -1,12 +1,28 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { ArrowUpDown, Zap, Shield, ShoppingCart, DollarSign, Copy, Check, ArrowRight, ArrowLeft, MoveLeft, MoveRight, CloudCog } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import {
+  ArrowUpDown,
+  Zap,
+  Shield,
+  ShoppingCart,
+  DollarSign,
+  Copy,
+  Check,
+  MoveLeft,
+  MoveRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import {
   getAvailableCurrencies,
   getEstimatedExchangeAmount,
@@ -15,41 +31,54 @@ import {
   validateAddress,
   getTransactionStatus,
   getExchangeRange,
-} from '@/lib/changenow-api-v2';
-import { CurrencyInput } from './CurrencyInput';
-import { ExchangeTypeSelector } from './ExchangeTypeSelector';
-import { WalletAddressInput } from './WalletAddressInput';
-import CurrencySelector from './CurrencySelector';
-import { CreateTransactionResponse, ExchangeCurrency } from '@/const/types';
+} from "@/lib/changenow-api-v2";
+import { CurrencyInput } from "./CurrencyInput";
+import { ExchangeTypeSelector } from "./ExchangeTypeSelector";
+import { WalletAddressInput } from "./WalletAddressInput";
+import CurrencySelector from "./CurrencySelector";
+import { TermsPopover } from "@/components/legal/TermsPopover";
+import { PrivacyPopover } from "@/components/legal/PrivacyPopover";
+import { CreateTransactionResponse, ExchangeCurrency } from "@/const/types";
 
 export function ExchangeWidget() {
-  const [activeTab, setActiveTab] = useState<'exchange' | 'buy' | 'sell'>('exchange');
-  const [fromCurrency, setFromCurrency] = useState('btc');
-  const [toCurrency, setToCurrency] = useState('eth');
-  const [fromAmount, setFromAmount] = useState('');
-  const [toAmount, setToAmount] = useState('');
+  const [activeTab, setActiveTab] = useState<"exchange" | "buy" | "sell">(
+    "exchange"
+  );
+  const [fromCurrency, setFromCurrency] = useState("btc");
+  const [toCurrency, setToCurrency] = useState("eth");
+  const [fromAmount, setFromAmount] = useState("");
+  const [toAmount, setToAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [minAmount, setMinAmount] = useState<string>('');
-  const [maxAmount, setMaxAmount] = useState<string>('');
-  const [calculationType, setCalculationType] = useState<'direct' | 'reverse'>('direct');
-  const [depositAddress, setDepositAddress] = useState('');
-  const [refundAddress, setRefundAddress] = useState('');
-  const [currentTransaction, setCurrentTransaction] = useState<CreateTransactionResponse | null>(null);
+  const [minAmount, setMinAmount] = useState<string>("");
+  const [maxAmount, setMaxAmount] = useState<string>("");
+  const [calculationType, setCalculationType] = useState<"direct" | "reverse">(
+    "direct"
+  );
+  const [depositAddress, setDepositAddress] = useState("");
+  const [refundAddress, setRefundAddress] = useState("");
+  const [currentTransaction, setCurrentTransaction] =
+    useState<CreateTransactionResponse | null>(null);
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false);
   const [showTransactionDialog, setShowTransactionDialog] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [allCurrencies, setAllCurrencies] = useState<ExchangeCurrency[]>([]);
-  const [selectedFromCurrency, setSelectedFromCurrency] = useState<ExchangeCurrency | null>(null);
-  const [selectedToCurrency, setSelectedToCurrency] = useState<ExchangeCurrency | null>(null);
-  const [rightColor, setRightColor] = useState(selectedFromCurrency?.color || "")
-  const [leftColor, setLeftColor] = useState(selectedToCurrency?.color || "")
-  const [exchangeType, setExchangeType] = useState<'fixed' | 'floating'>('fixed');
+  const [selectedFromCurrency, setSelectedFromCurrency] =
+    useState<ExchangeCurrency | null>(null);
+  const [selectedToCurrency, setSelectedToCurrency] =
+    useState<ExchangeCurrency | null>(null);
+  const [rightColor, setRightColor] = useState(
+    selectedFromCurrency?.color || ""
+  );
+  const [leftColor, setLeftColor] = useState(selectedToCurrency?.color || "");
+  const [exchangeType, setExchangeType] = useState<"fixed" | "floating">(
+    "fixed"
+  );
   const { toast } = useToast();
 
   // Memoize filtered currencies for better performance
   const filteredCurrencies = useMemo(() => {
     return allCurrencies
-      .filter(c => !c.isFiat)
+      .filter((c) => !c.isFiat)
       .sort((a, b) => {
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
@@ -58,10 +87,16 @@ export function ExchangeWidget() {
   }, [allCurrencies]);
 
   // Exchange type charges
-  const exchangeCharges = useMemo(() => ({
-    fixed: { rate: 1.0, description: 'Fixed rate - guaranteed for 15 minutes' },
-    floating: { rate: 0.5, description: 'Floating rate - best market price' }
-  }), []);
+  const exchangeCharges = useMemo(
+    () => ({
+      fixed: {
+        rate: 1.0,
+        description: "Fixed rate - guaranteed for 15 minutes",
+      },
+      floating: { rate: 0.5, description: "Floating rate - best market price" },
+    }),
+    []
+  );
 
   // Fetch all currencies on component mount
   useEffect(() => {
@@ -69,35 +104,35 @@ export function ExchangeWidget() {
       try {
         const currencies = await getAvailableCurrencies({
           active: true,
-          flow: 'standard',
+          flow: "standard",
           buy: true,
-          sell: true
+          sell: true,
         });
 
         if (currencies) {
           setAllCurrencies(currencies);
 
           // Set initial selected currencies
-          const btc = currencies.find(c => c.ticker === 'btc');
-          const eth = currencies.find(c => c.ticker === 'eth');
+          const btc = currencies.find((c) => c.ticker === "btc");
+          const eth = currencies.find((c) => c.ticker === "eth");
           if (btc) {
             setSelectedFromCurrency(btc);
-            setRightColor(btc.color || '');
+            setRightColor(btc.color || "");
           }
 
           if (eth) {
             setSelectedToCurrency(eth);
-            setLeftColor(eth.color || '');
+            setLeftColor(eth.color || "");
           }
         } else {
-          throw new Error('No currencies returned from API');
+          throw new Error("No currencies returned from API");
         }
       } catch (error) {
-        console.error('Failed to fetch currencies:', error);
+        console.error("Failed to fetch currencies:", error);
         toast({
-          title: 'Error',
-          description: 'Failed to load available currencies',
-          variant: 'destructive',
+          title: "Error",
+          description: "Failed to load available currencies",
+          variant: "destructive",
         });
       }
     };
@@ -107,16 +142,16 @@ export function ExchangeWidget() {
 
   // Update selected currency when fromCurrency changes
   useEffect(() => {
-    const currency = allCurrencies.find(c => c.ticker === fromCurrency);
+    const currency = allCurrencies.find((c) => c.ticker === fromCurrency);
     setSelectedFromCurrency(currency || null);
-    setRightColor(currency?.color || '');
+    setRightColor(currency?.color || "");
   }, [fromCurrency, allCurrencies]);
 
   // Update selected currency when toCurrency changes
   useEffect(() => {
-    const currency = allCurrencies.find(c => c.ticker === toCurrency);
+    const currency = allCurrencies.find((c) => c.ticker === toCurrency);
     setSelectedToCurrency(currency || null);
-    setLeftColor(currency?.color || '');
+    setLeftColor(currency?.color || "");
   }, [toCurrency, allCurrencies]);
 
   // Minimum and Maximum amounts
@@ -128,9 +163,9 @@ export function ExchangeWidget() {
           //   flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard'
           // });
           const range = await getExchangeRange(fromCurrency, toCurrency, {
-            flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard'
-          })
-          console.log("from raneg: ", range)
+            flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
+          });
+          console.log("from raneg: ", range);
           if (range) {
             setMinAmount(range.minAmount.toString());
           }
@@ -138,7 +173,7 @@ export function ExchangeWidget() {
             setMaxAmount(range.maxAmount.toString());
           }
         } catch (error) {
-          console.error('Error fetching amount limits:', error);
+          console.error("Error fetching amount limits:", error);
         }
       }
     };
@@ -151,67 +186,95 @@ export function ExchangeWidget() {
     const performEstimate = async () => {
       if (!fromCurrency || !toCurrency) return;
 
-      const amount = calculationType === 'direct'
-        ? parseFloat(fromAmount)
-        : parseFloat(toAmount);
+      const amount =
+        calculationType === "direct"
+          ? parseFloat(fromAmount)
+          : parseFloat(toAmount);
 
       if (!amount || amount <= 0) {
-        calculationType === 'direct' ? setToAmount('') : setFromAmount('');
+        if (calculationType === "direct") {
+          setToAmount("");
+        } else {
+          setFromAmount("");
+        }
         return;
       }
 
       setIsLoading(true);
       try {
-        const result = await getEstimatedExchangeAmount(fromCurrency, toCurrency, {
-          [calculationType === 'direct' ? 'fromAmount' : 'toAmount']: amount,
-          flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard',
-          type: calculationType
-        });
+        const result = await getEstimatedExchangeAmount(
+          fromCurrency,
+          toCurrency,
+          {
+            [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
+            flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
+            type: calculationType,
+          }
+        );
 
-        calculationType === 'direct'
-          ? setToAmount(result.toAmount?.toString() ?? '')
-          : setFromAmount(result.fromAmount?.toString() ?? '');
+        if (calculationType === "direct") {
+          setToAmount(result.toAmount?.toString() ?? "");
+        } else {
+          setFromAmount(result.fromAmount?.toString() ?? "");
+        }
       } catch (err) {
-        console.error('Error estimating amount:', err);
+        console.error("Error estimating amount:", err);
         toast({
-          title: 'Error Estimating',
-          description: err instanceof Error ? err.message : 'Unknown error',
+          title: "Error Estimating",
+          description: err instanceof Error ? err.message : "Unknown error",
         });
-        calculationType === 'direct' ? setToAmount('') : setFromAmount('');
+        if (calculationType === "direct") {
+          setToAmount("");
+        } else {
+          setFromAmount("");
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     performEstimate();
-  }, [fromCurrency, toCurrency, fromAmount, toAmount, calculationType, exchangeType]);
+  }, [
+    fromCurrency,
+    toCurrency,
+    fromAmount,
+    toAmount,
+    calculationType,
+    exchangeType,
+    toast,
+  ]);
 
   const handleSwapCurrencies = useCallback(() => {
     setFromCurrency(toCurrency);
     setToCurrency(fromCurrency);
-    if (calculationType === 'direct') {
+    if (calculationType === "direct") {
       setFromAmount(toAmount);
-      setToAmount('');
+      setToAmount("");
     } else {
       setToAmount(fromAmount);
-      setFromAmount('');
+      setFromAmount("");
     }
   }, [fromCurrency, toCurrency, fromAmount, toAmount, calculationType]);
 
-  const handleFromCurrencyChange = useCallback((value: string) => {
-    if (toCurrency === value) {
-      setToCurrency(fromCurrency)
-    }
-    setFromCurrency(value);
-  }, []);
+  const handleFromCurrencyChange = useCallback(
+    (value: string) => {
+      if (toCurrency === value) {
+        setToCurrency(fromCurrency);
+      }
+      setFromCurrency(value);
+    },
+    [fromCurrency, toCurrency]
+  );
 
-  const handleToCurrencyChange = useCallback((value: string) => {
-    if (fromCurrency === value) {
-      setFromCurrency(toCurrency)
-    }
-    setToCurrency(value);
-
-  }, []);
+  const handleToCurrencyChange = useCallback(
+    (value: string) => {
+      if (fromCurrency === value) {
+        setFromCurrency(toCurrency);
+      }
+      setToCurrency(value);
+    },
+    [fromCurrency, toCurrency]
+  );
 
   const handleCopyAddress = async (address: string) => {
     try {
@@ -219,14 +282,14 @@ export function ExchangeWidget() {
       setCopiedAddress(address);
       setTimeout(() => setCopiedAddress(null), 2000);
       toast({
-        title: 'Address Copied',
-        description: 'Wallet address copied to clipboard',
+        title: "Address Copied",
+        description: "Wallet address copied to clipboard",
       });
     } catch (error) {
       toast({
-        title: 'Copy Failed',
-        description: 'Failed to copy address to clipboard',
-        variant: 'destructive',
+        title: "Copy Failed",
+        description: "Failed to copy address to clipboard",
+        variant: "destructive",
       });
     }
   };
@@ -234,33 +297,43 @@ export function ExchangeWidget() {
   const validateWalletAddresses = async () => {
     if (!depositAddress.trim()) {
       toast({
-        title: 'Missing Deposit Address',
-        description: 'Please enter your deposit wallet address.',
-        variant: 'destructive',
+        title: "Missing Deposit Address",
+        description: "Please enter your deposit wallet address.",
+        variant: "destructive",
       });
       return false;
     }
 
     try {
       // Validate deposit address
-      const depositValidation = await validateAddress(toCurrency, depositAddress);
+      const depositValidation = await validateAddress(
+        toCurrency,
+        depositAddress
+      );
       if (!depositValidation?.result) {
         toast({
-          title: 'Invalid Deposit Address',
-          description: depositValidation?.message || `Please enter a valid ${toCurrency.toUpperCase()} wallet address.`,
-          variant: 'destructive',
+          title: "Invalid Deposit Address",
+          description:
+            depositValidation?.message ||
+            `Please enter a valid ${toCurrency.toUpperCase()} wallet address.`,
+          variant: "destructive",
         });
         return false;
       }
 
       // Validate refund address only if provided
       if (refundAddress.trim()) {
-        const refundValidation = await validateAddress(fromCurrency, refundAddress);
+        const refundValidation = await validateAddress(
+          fromCurrency,
+          refundAddress
+        );
         if (!refundValidation?.result) {
           toast({
-            title: 'Invalid Refund Address',
-            description: refundValidation?.message || `Please enter a valid ${fromCurrency.toUpperCase()} wallet address.`,
-            variant: 'destructive',
+            title: "Invalid Refund Address",
+            description:
+              refundValidation?.message ||
+              `Please enter a valid ${fromCurrency.toUpperCase()} wallet address.`,
+            variant: "destructive",
           });
           return false;
         }
@@ -269,25 +342,25 @@ export function ExchangeWidget() {
       return true;
     } catch (error) {
       toast({
-        title: 'Validation Error',
-        description: 'Unable to validate wallet addresses. Please try again.',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "Unable to validate wallet addresses. Please try again.",
+        variant: "destructive",
       });
       return false;
     }
   };
 
-  const handleTransaction = async (type: 'exchange' | 'buy' | 'sell') => {
+  const handleTransaction = async (type: "exchange" | "buy" | "sell") => {
     if (!fromAmount || !toAmount) {
       toast({
-        title: 'Missing Information',
-        description: 'Please enter an amount to proceed.',
-        variant: 'destructive',
+        title: "Missing Information",
+        description: "Please enter an amount to proceed.",
+        variant: "destructive",
       });
       return;
     }
 
-    if (type === 'exchange') {
+    if (type === "exchange") {
       // Validate wallet addresses for exchange
       const isValid = await validateWalletAddresses();
       if (!isValid) return;
@@ -298,30 +371,32 @@ export function ExchangeWidget() {
         const transaction = await createExchangeTransaction({
           fromCurrency,
           toCurrency,
-          fromAmount: calculationType === 'direct' ? fromAmount : undefined,
-          toAmount: calculationType === 'reverse' ? toAmount : undefined,
+          fromAmount: calculationType === "direct" ? fromAmount : undefined,
+          toAmount: calculationType === "reverse" ? toAmount : undefined,
           address: depositAddress,
           refundAddress: refundAddress.trim() || undefined,
-          flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard',
-          type: calculationType
+          flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
+          type: calculationType,
         });
 
         if (transaction) {
           setCurrentTransaction(transaction);
           setShowTransactionDialog(true);
           toast({
-            title: 'Exchange Created',
-            description: 'Your exchange transaction has been created successfully.',
+            title: "Exchange Created",
+            description:
+              "Your exchange transaction has been created successfully.",
           });
         } else {
-          throw new Error('Failed to create transaction');
+          throw new Error("Failed to create transaction");
         }
       } catch (error) {
-        console.error('Transaction creation error:', error);
+        console.error("Transaction creation error:", error);
         toast({
-          title: 'Transaction Failed',
-          description: 'Failed to create exchange transaction. Please try again.',
-          variant: 'destructive',
+          title: "Transaction Failed",
+          description:
+            "Failed to create exchange transaction. Please try again.",
+          variant: "destructive",
         });
       } finally {
         setIsCreatingTransaction(false);
@@ -329,25 +404,30 @@ export function ExchangeWidget() {
     } else {
       // For buy/sell, show placeholder message
       const actionMap = {
-        buy: 'Buy Order Created',
-        sell: 'Sell Order Created',
+        buy: "Buy Order Created",
+        sell: "Sell Order Created",
       };
 
       toast({
         title: actionMap[type],
-        description: 'This feature will be available soon.',
+        description: "This feature will be available soon.",
       });
     }
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto dark:bg-card bg-gray-200 backdrop-blur-sm border-border shadow-card
+    <Card
+      className="w-full max-w-4xl mx-auto dark:bg-card bg-gray-200 backdrop-blur-sm border-border shadow-card
                      flex flex-col"
-      style={{ minHeight: '350px' }}
+      style={{ minHeight: "350px" }}
     >
       <CardContent className="flex-1 flex flex-col pt-4">
         {/* Tabs with active background */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full flex flex-col flex-1">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "exchange" | "buy" | "sell")}
+          className="w-full flex flex-col flex-1"
+        >
           <TabsList className="grid w-full grid-cols-3 relative bg-muted p-1 rounded-lg">
             <TabsTrigger
               value="exchange"
@@ -376,9 +456,12 @@ export function ExchangeWidget() {
               className="absolute top-1 bottom-1 bg-background shadow-sm rounded-md transition-all duration-500"
               style={{
                 width: `calc(33.333% - 0.5rem)`,
-                left: activeTab === 'exchange' ? '0.25rem' :
-                  activeTab === 'buy' ? 'calc(33.333% + 0.25rem)' :
-                    'calc(66.666% + 0.25rem)',
+                left:
+                  activeTab === "exchange"
+                    ? "0.25rem"
+                    : activeTab === "buy"
+                    ? "calc(33.333% + 0.25rem)"
+                    : "calc(66.666% + 0.25rem)",
               }}
             />
           </TabsList>
@@ -396,7 +479,7 @@ export function ExchangeWidget() {
                     value={fromAmount}
                     onChange={(value) => {
                       setFromAmount(value);
-                      setCalculationType('direct');
+                      setCalculationType("direct");
                     }}
                     selectedCurrency={selectedFromCurrency}
                     placeholder="0.00"
@@ -409,15 +492,25 @@ export function ExchangeWidget() {
                   />
                   {fromAmount && selectedFromCurrency && (
                     <div className="text-xs text-muted-foreground">
-                      1 {selectedFromCurrency.ticker.toUpperCase()} ≈ {toAmount ? (parseFloat(toAmount) / parseFloat(fromAmount)).toFixed(6) : '0.000000'} {selectedToCurrency?.ticker.toUpperCase() || ''}
+                      1 {selectedFromCurrency.ticker.toUpperCase()} ≈{" "}
+                      {toAmount
+                        ? (
+                            parseFloat(toAmount) / parseFloat(fromAmount)
+                          ).toFixed(6)
+                        : "0.000000"}{" "}
+                      {selectedToCurrency?.ticker.toUpperCase() || ""}
                     </div>
                   )}
                   <div className="flex justify-between text-xs text-muted-foreground">
                     {minAmount && (
-                      <span>Min: {minAmount} {fromCurrency.toUpperCase()}</span>
+                      <span>
+                        Min: {minAmount} {fromCurrency.toUpperCase()}
+                      </span>
                     )}
                     {maxAmount && (
-                      <span>Max: {maxAmount} {fromCurrency.toUpperCase()}</span>
+                      <span>
+                        Max: {maxAmount} {fromCurrency.toUpperCase()}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -430,15 +523,22 @@ export function ExchangeWidget() {
                   size="sm"
                   // className="rounded-full p-2"
                 > */}
-                <div className="flex flex-col items-center rotate-90 md:rotate-0"
+                <div
+                  className="flex flex-col items-center rotate-90 md:rotate-0"
                   onClick={handleSwapCurrencies}
                 >
-                  <MoveRight className="md:w-7 md:h-7 w-5 h-5 md:-mb-4 -mb-2 md:ml-2 ml-2 " style={{
-                    color: rightColor || "",
-                  }} />
-                  <MoveLeft className="md:w-7 md:h-7 w-5 h-5  md:mr-4 " style={{
-                    color: leftColor || "",
-                  }} />
+                  <MoveRight
+                    className="md:w-7 md:h-7 w-5 h-5 md:-mb-4 -mb-2 md:ml-2 ml-2 "
+                    style={{
+                      color: rightColor || "",
+                    }}
+                  />
+                  <MoveLeft
+                    className="md:w-7 md:h-7 w-5 h-5  md:mr-4 "
+                    style={{
+                      color: leftColor || "",
+                    }}
+                  />
                 </div>
                 {/* </Button> */}
               </div>
@@ -450,10 +550,10 @@ export function ExchangeWidget() {
                 </label>
                 <div className="space-y-2">
                   <CurrencyInput
-                    value={isLoading ? 'Calculating...' : toAmount}
+                    value={isLoading ? "Calculating..." : toAmount}
                     onChange={(value) => {
                       setToAmount(value);
-                      setCalculationType('reverse');
+                      setCalculationType("reverse");
                     }}
                     selectedCurrency={selectedToCurrency}
                     placeholder="0.00"
@@ -467,7 +567,13 @@ export function ExchangeWidget() {
                   />
                   {toAmount && selectedToCurrency && (
                     <div className="text-xs text-muted-foreground">
-                      1 {selectedToCurrency.ticker.toUpperCase()} ≈ {fromAmount ? (parseFloat(fromAmount) / parseFloat(toAmount)).toFixed(6) : '0.000000'} {selectedFromCurrency?.ticker.toUpperCase() || ''}
+                      1 {selectedToCurrency.ticker.toUpperCase()} ≈{" "}
+                      {fromAmount
+                        ? (
+                            parseFloat(fromAmount) / parseFloat(toAmount)
+                          ).toFixed(6)
+                        : "0.000000"}{" "}
+                      {selectedFromCurrency?.ticker.toUpperCase() || ""}
                     </div>
                   )}
                 </div>
@@ -478,8 +584,12 @@ export function ExchangeWidget() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
               {/* Destination Address */}
               <WalletAddressInput
-                label={`Destination (${selectedToCurrency?.ticker.toUpperCase() || 'crypto'})`}
-                placeholder={`Your ${selectedToCurrency?.ticker.toUpperCase() || 'crypto'} address`}
+                label={`Destination (${
+                  selectedToCurrency?.ticker.toUpperCase() || "crypto"
+                })`}
+                placeholder={`Your ${
+                  selectedToCurrency?.ticker.toUpperCase() || "crypto"
+                } address`}
                 value={depositAddress}
                 onChange={setDepositAddress}
                 onCopy={() => handleCopyAddress(depositAddress)}
@@ -498,8 +608,12 @@ export function ExchangeWidget() {
             {/* Refund Address - Optional */}
             <div className="mt-4">
               <WalletAddressInput
-                label={`Refund Address (${selectedFromCurrency?.ticker.toUpperCase() || 'crypto'}) - Optional`}
-                placeholder={`Your ${selectedFromCurrency?.ticker.toUpperCase() || 'crypto'} address for refunds`}
+                label={`Refund Address (${
+                  selectedFromCurrency?.ticker.toUpperCase() || "crypto"
+                }) - Optional`}
+                placeholder={`Your ${
+                  selectedFromCurrency?.ticker.toUpperCase() || "crypto"
+                } address for refunds`}
                 value={refundAddress}
                 onChange={setRefundAddress}
                 onCopy={() => handleCopyAddress(refundAddress)}
@@ -508,22 +622,42 @@ export function ExchangeWidget() {
               />
             </div>
             <div className="mt-4 flex flex-col-reverse md:flex-row justify-between ">
-              <span className='text-xs mt-1 md:mt-0 md:text-sm text-muted-foreground text-orange-500 text-center md:text-left'>
-                By clicking Exchange now, you agree to the
-                <span className="block md:inline">
-                  {' '}<span className='font-bold text-primary underline cursor-pointer'>Terms & Conditions</span> and{' '}
-                  <span className='font-bold text-primary underline cursor-pointer'>Privacy Policy</span>
+              <span className="text-xs mt-1 md:mt-0 md:text-sm text-muted-foreground text-orange-500">
+                <span className="text-center md:text-left block">
+                  By clicking Exchange now, you agree to the
+                  <span className="block md:inline">
+                    {" "}
+                    <TermsPopover>
+                      <span className="font-bold text-primary underline cursor-pointer">
+                        Terms & Conditions
+                      </span>
+                    </TermsPopover>{" "}
+                    and{" "}
+                    <PrivacyPopover>
+                      <span className="font-bold text-primary underline cursor-pointer">
+                        Privacy Policy
+                      </span>
+                    </PrivacyPopover>
+                  </span>
                 </span>
               </span>
               {/* Exchange Button */}
               <Button
                 variant="crypto"
                 size="lg"
-                onClick={() => handleTransaction('exchange')}
-                disabled={!fromAmount || !toAmount || isLoading || isCreatingTransaction || !depositAddress.trim()}
+                onClick={() => handleTransaction("exchange")}
+                disabled={
+                  !fromAmount ||
+                  !toAmount ||
+                  isLoading ||
+                  isCreatingTransaction ||
+                  !depositAddress.trim()
+                }
                 className="px-8"
               >
-                {isCreatingTransaction ? 'Creating Exchange...' : 'Exchange now'}
+                {isCreatingTransaction
+                  ? "Creating Exchange..."
+                  : "Exchange now"}
               </Button>
             </div>
           </TabsContent>
@@ -548,8 +682,8 @@ export function ExchangeWidget() {
               </label>
               <div className="flex gap-2">
                 <CurrencyInput
-                  value={isLoading ? 'Calculating...' : toAmount}
-                  onChange={() => { }} // Read-only
+                  value={isLoading ? "Calculating..." : toAmount}
+                  onChange={() => {}} // Read-only
                   selectedCurrency={selectedToCurrency}
                   placeholder="0.00"
                   readOnly
@@ -568,7 +702,7 @@ export function ExchangeWidget() {
               variant="crypto"
               size="lg"
               className="w-full"
-              onClick={() => handleTransaction('buy')}
+              onClick={() => handleTransaction("buy")}
               disabled={!fromAmount || isLoading}
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
@@ -606,7 +740,7 @@ export function ExchangeWidget() {
               <Input
                 type="text"
                 placeholder="0.00"
-                value={isLoading ? 'Calculating...' : toAmount}
+                value={isLoading ? "Calculating..." : toAmount}
                 readOnly
                 className="focus-visible:ring-0 focus-visible:ring-offset-0"
               />
@@ -615,7 +749,7 @@ export function ExchangeWidget() {
               variant="crypto"
               size="lg"
               className="w-full"
-              onClick={() => handleTransaction('sell')}
+              onClick={() => handleTransaction("sell")}
               disabled={!fromAmount || isLoading}
             >
               <DollarSign className="w-4 h-4 mr-2" />
@@ -630,7 +764,10 @@ export function ExchangeWidget() {
       </CardContent>
 
       {/* Transaction Confirmation Dialog */}
-      <Dialog open={showTransactionDialog} onOpenChange={setShowTransactionDialog}>
+      <Dialog
+        open={showTransactionDialog}
+        onOpenChange={setShowTransactionDialog}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -638,7 +775,8 @@ export function ExchangeWidget() {
               Exchange Created Successfully
             </DialogTitle>
             <DialogDescription>
-              Your exchange transaction has been created. Please send your {fromCurrency.toUpperCase()} to the address below.
+              Your exchange transaction has been created. Please send your{" "}
+              {fromCurrency.toUpperCase()} to the address below.
             </DialogDescription>
           </DialogHeader>
 
@@ -663,7 +801,9 @@ export function ExchangeWidget() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleCopyAddress(currentTransaction.payinAddress)}
+                      onClick={() =>
+                        handleCopyAddress(currentTransaction.payinAddress)
+                      }
                     >
                       {copiedAddress === currentTransaction.payinAddress ? (
                         <Check className="w-4 h-4" />
@@ -699,8 +839,9 @@ export function ExchangeWidget() {
 
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Important:</strong> Only send {fromCurrency.toUpperCase()} to the address above.
-                  Sending other cryptocurrencies will result in permanent loss.
+                  <strong>Important:</strong> Only send{" "}
+                  {fromCurrency.toUpperCase()} to the address above. Sending
+                  other cryptocurrencies will result in permanent loss.
                 </p>
               </div>
 
@@ -716,7 +857,10 @@ export function ExchangeWidget() {
                   className="flex-1"
                   onClick={() => {
                     // In a real app, this would open the transaction tracking page
-                    window.open(`https://changenow.io/exchange/txs/${currentTransaction.id}`, '_blank');
+                    window.open(
+                      `https://changenow.io/exchange/txs/${currentTransaction.id}`,
+                      "_blank"
+                    );
                   }}
                 >
                   Track Transaction
