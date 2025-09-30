@@ -1,25 +1,81 @@
-import React, { useState } from 'react';
-import { Menu, X, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import React, { useState, useEffect } from "react";
+import { Menu, X, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { SignInPopover } from "@/components/auth/SignInPopover";
+import { UserProfilePopover } from "@/components/auth/UserProfilePopover";
+import type { User } from "@/lib/user-services-api";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check for existing user session on component mount
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const userData = localStorage.getItem("user_data");
+
+        if (token && userData) {
+          try {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+          } catch (parseError) {
+            // Clear invalid data
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("user_data");
+          }
+        }
+      } catch (error) {
+        // Clear invalid data
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user_data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+
+    // Listen for storage changes (e.g., login/logout in another tab)
+    const handleStorageChange = () => {
+      checkAuthStatus();
+    };
+
+    // Listen for auth state changes (e.g., login/logout)
+    const handleAuthStateChange = () => {
+      checkAuthStatus();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("auth-state-changed", handleAuthStateChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("auth-state-changed", handleAuthStateChange);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    setUser(null);
+  };
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const navigation = [
-    { name: 'Exchange', href: '#exchange' },
-    { name: 'Why BlockHaven', href: '#why-blockhaven' },
-    { name: 'Markets', href: '#markets' },
-    { name: 'FAQ', href: '#faq' },
-    { name: 'Contact', href: '#contact' }
+    { name: "Exchange", href: "#exchange" },
+    { name: "Why BlockHaven", href: "#why-blockhaven" },
+    { name: "Markets", href: "#markets" },
+    { name: "FAQ", href: "#faq" },
+    { name: "Contact", href: "#contact" },
   ];
 
   const handleNavClick = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
     }
     setIsMenuOpen(false);
   };
@@ -50,24 +106,23 @@ export function Header() {
             ))}
           </div>
 
-          {/* Desktop CTA & Theme Toggle */}
+          {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
+            {!isLoading &&
+              (user ? (
+                <UserProfilePopover user={user} onLogout={handleLogout} />
+              ) : (
+                <SignInPopover>
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </SignInPopover>
+              ))}
             <ThemeToggle />
           </div>
 
-          {/* Desktop CTA */}
-          {/* <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              Sign In
-            </Button>
-            <Button variant="crypto" size="sm">
-              Start Trading
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </div> */}
-
           {/* Mobile menu button & Theme Toggle */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="md:hidden flex items-center ">
             <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={toggleMenu}>
               {isMenuOpen ? (
@@ -92,15 +147,22 @@ export function Header() {
                   {item.name}
                 </button>
               ))}
-              {/* <div className="px-3 py-2 space-y-2">
-                <Button variant="ghost" size="sm" className="w-full justify-start">
-                  Sign In
-                </Button>
-                <Button variant="crypto" size="sm" className="w-full justify-center">
-                  Start Trading
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </div> */}
+              <div className="px-3 py-2 space-y-2">
+                {!isLoading &&
+                  (user ? (
+                    <UserProfilePopover user={user} onLogout={handleLogout} />
+                  ) : (
+                    <SignInPopover>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start"
+                      >
+                        Sign In
+                      </Button>
+                    </SignInPopover>
+                  ))}
+              </div>
             </div>
           </div>
         )}
