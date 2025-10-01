@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Header } from "@/components/sections/Header";
 import { Hero } from "@/components/sections/Hero";
 import { WhyBlockHaven } from "@/components/sections/WhyBlockHaven";
+import { Testimonials } from "@/components/sections/Testimonials";
 import { FAQ } from "@/components/sections/FAQ";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
@@ -33,6 +34,7 @@ const Index = () => {
       <Header onDashboardOpen={handleDashboardOpen} />
       <Hero />
       <WhyBlockHaven />
+      <Testimonials />
       <FAQ />
       <Contact />
       <Footer />

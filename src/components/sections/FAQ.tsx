@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -43,7 +42,7 @@ const faqs = [
 
 export function FAQ() {
   return (
-    <section id="faq" className="py-20 bg-background relative overflow-hidden">
+    <section id="faq" className="py-20 bg-muted/30 relative overflow-hidden">
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">

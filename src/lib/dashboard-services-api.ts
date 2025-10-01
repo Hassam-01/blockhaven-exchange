@@ -75,10 +75,17 @@ const apiCall = async <T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+    console.error('API Error:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: `${API_CONFIG.BASE_URL}${endpoint}`,
+      method: options.method || 'GET',
+      errorData
+    });
     throw new Error(
       errorData.message ||
         errorData.error ||
-        `HTTP error! status: ${response.status}`
+        `HTTP error! status: ${response.status} - ${response.statusText}`
     );
   }
 
@@ -160,6 +167,7 @@ export const toggleFAQStatus = async (
   return apiCall<FAQ>(`${API_CONFIG.ENDPOINTS.FAQS.BASE}/${id}/toggle`, {
     method: HTTP_METHODS.PATCH,
     headers: getAuthHeaders(token),
+    body: JSON.stringify({}),
   });
 };
 
@@ -167,6 +175,7 @@ export const pauseFAQ = async (token: string, id: string): Promise<FAQ> => {
   return apiCall<FAQ>(`${API_CONFIG.ENDPOINTS.FAQS.BASE}/${id}/pause`, {
     method: HTTP_METHODS.PATCH,
     headers: getAuthHeaders(token),
+    body: JSON.stringify({}),
   });
 };
 
@@ -174,6 +183,7 @@ export const activateFAQ = async (token: string, id: string): Promise<FAQ> => {
   return apiCall<FAQ>(`${API_CONFIG.ENDPOINTS.FAQS.BASE}/${id}/activate`, {
     method: HTTP_METHODS.PATCH,
     headers: getAuthHeaders(token),
+    body: JSON.stringify({}),
   });
 };
 
@@ -258,6 +268,7 @@ export const approveTestimonial = async (
     {
       method: HTTP_METHODS.PATCH,
       headers: getAuthHeaders(token),
+      body: JSON.stringify({}),
     }
   );
 };
@@ -271,6 +282,7 @@ export const rejectTestimonial = async (
     {
       method: HTTP_METHODS.PATCH,
       headers: getAuthHeaders(token),
+      body: JSON.stringify({}),
     }
   );
 };

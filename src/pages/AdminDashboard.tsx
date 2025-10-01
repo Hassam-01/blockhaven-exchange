@@ -12,6 +12,8 @@ import {
   Check,
   X,
   Eye,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -119,6 +121,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
   const [faqLoading, setFaqLoading] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
   const [showFaqDialog, setShowFaqDialog] = useState(false);
+  const [expandedFaqs, setExpandedFaqs] = useState<Set<string>>(new Set());
 
   // Testimonial state
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -312,7 +315,8 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       await loadTestimonials();
       await loadTestimonialStats();
     } catch (err) {
-      setError("Failed to approve testimonial.");
+      console.error("Error approving testimonial:", err);
+      setError(`Failed to approve testimonial: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -481,6 +485,18 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
     setShowFaqDialog(true);
   };
 
+  const toggleFaqExpansion = (faqId: string) => {
+    setExpandedFaqs(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(faqId)) {
+        newSet.delete(faqId);
+      } else {
+        newSet.add(faqId);
+      }
+      return newSet;
+    });
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<
       string,
@@ -590,16 +606,22 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {serviceFeeStats?.averageFeePercentage?.toFixed(2) || 0}%
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    $
-                    {serviceFeeStats?.totalFeesCollected?.toLocaleString() || 0}{" "}
-                    collected
-                  </p>
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-sm">Fixed Rate:</span>
+                        <span className="text-xl font-semibold ">
+                            {(serviceFeeConfig as any)?.fixedRateFee ?? 0}%
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-sm">Floating Rate:</span>
+                        <span className="text-xl font-semibold ">
+                            {(serviceFeeConfig as any)?.floatingRateFee ?? 0}%
+                        </span>
+                    </div>
+                </div>
                 </CardContent>
-              </Card>
+              </Card> 
             </div>
           </TabsContent>
 
@@ -618,6 +640,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-12"></TableHead>
                       <TableHead>Question</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
@@ -627,41 +650,71 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                   <TableBody>
                     {Array.isArray(faqs) &&
                       faqs.map((faq) => (
-                        <TableRow key={faq.id}>
-                          <TableCell className="font-medium max-w-md truncate">
-                            {faq.question}
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(
-                              faq.is_active ? "Active" : "Inactive"
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(faq.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openFaqDialog(faq)}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteFAQ(faq.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                        <React.Fragment key={faq.id}>
+                          <TableRow className="cursor-pointer hover:bg-muted/50">
+                            <TableCell 
+                              onClick={() => toggleFaqExpansion(faq.id)}
+                              className="text-center"
+                            >
+                              {expandedFaqs.has(faq.id) ? (
+                                <ChevronDown className="w-4 h-4 mx-auto" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 mx-auto" />
+                              )}
+                            </TableCell>
+                            <TableCell 
+                              className="font-medium max-w-md truncate cursor-pointer"
+                              onClick={() => toggleFaqExpansion(faq.id)}
+                            >
+                              {faq.question}
+                            </TableCell>
+                            <TableCell onClick={() => toggleFaqExpansion(faq.id)}>
+                              {getStatusBadge(
+                                faq.is_active ? "Active" : "Inactive"
+                              )}
+                            </TableCell>
+                            <TableCell onClick={() => toggleFaqExpansion(faq.id)}>
+                              {new Date(faq.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openFaqDialog(faq)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteFAQ(faq.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          {expandedFaqs.has(faq.id) && (
+                            <TableRow>
+                              <TableCell></TableCell>
+                              <TableCell colSpan={4} className="pt-0">
+                                <div className="p-4 bg-muted/30 rounded-lg">
+                                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                                    Answer:
+                                  </p>
+                                  <p className="text-sm whitespace-pre-wrap">
+                                    {faq.answer}
+                                  </p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
                       ))}
                     {faqLoading && (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8">
+                        <TableCell colSpan={5} className="text-center py-8">
                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
                           <p className="mt-2 text-sm text-muted-foreground">
                             Loading FAQs...
@@ -673,7 +726,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                       Array.isArray(faqs) &&
                       faqs.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8">
+                          <TableCell colSpan={5} className="text-center py-8">
                             <p className="text-muted-foreground">
                               No FAQs found. Create your first FAQ to get
                               started.
@@ -833,7 +886,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                         type="text"
                         value={fixedRatePercentage}
                         onChange={(e) => setFixedRatePercentage(e.target.value)}
-                        placeholder={(serviceFeeConfig as any).fixedRateFee}
+                        placeholder="Enter percentage (0-100)"
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <Button
@@ -868,7 +921,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                         onChange={(e) =>
                           setFloatingRatePercentage(e.target.value)
                         }
-                        placeholder={(serviceFeeConfig as any).floatingRateFee}
+                        placeholder="Enter percentage (0-100)"
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <Button
