@@ -40,6 +40,8 @@ export const API_CONFIG = {
       RESET: '/api/service-fees/reset',
       VALIDATE: '/api/service-fees/validate',
     },
+    // Contact endpoint
+    CONTACT: '/api/contact',
   },
 } as const;
 
