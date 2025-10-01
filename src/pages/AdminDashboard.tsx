@@ -1,16 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Shield, Users, MessageSquare, DollarSign, Settings, Plus, Edit, Trash2, Check, X, Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  Shield,
+  Users,
+  MessageSquare,
+  DollarSign,
+  Settings,
+  Plus,
+  Edit,
+  Trash2,
+  Check,
+  X,
+  Eye,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -18,7 +49,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
 // API imports
 import {
@@ -35,12 +66,14 @@ import {
   bulkApproveTestimonials,
   bulkRejectTestimonials,
   updateServiceFeeConfig,
-  getServiceFeeStats,
+  updateFixedRateFee,
+  updateFloatingRateFee,
+  //   getServiceFeeStats,
   getCurrentServiceFeeConfig,
   getServiceFeeHistory,
   resetServiceFeeConfig,
   checkAdminAccess,
-} from '@/lib/dashboard-services-api';
+} from "@/lib/dashboard-services-api";
 
 import type {
   FAQStats,
@@ -49,7 +82,7 @@ import type {
   ServiceFeeHistory,
   BulkStatusRequest,
   BulkTestimonialRequest,
-} from '@/lib/dashboard-services-api';
+} from "@/lib/dashboard-services-api";
 
 import type {
   FAQ,
@@ -58,7 +91,7 @@ import type {
   Testimonial,
   ServiceFeeConfig,
   SetServiceFeeRequest,
-} from '@/lib/user-services-api';
+} from "@/lib/user-services-api";
 
 // Define the actual API response structure
 interface FAQResponse {
@@ -78,7 +111,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
   // State management
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
 
   // FAQ state
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -89,32 +122,41 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
 
   // Testimonial state
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [testimonialStats, setTestimonialStats] = useState<TestimonialStats | null>(null);
+  const [testimonialStats, setTestimonialStats] =
+    useState<TestimonialStats | null>(null);
   const [testimonialLoading, setTestimonialLoading] = useState(false);
-  const [testimonialFilter, setTestimonialFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [testimonialFilter, setTestimonialFilter] = useState<
+    "all" | "pending" | "approved" | "rejected"
+  >("all");
 
   // Service Fee state
   const [serviceFeeConfig, setServiceFeeConfig] = useState<ServiceFeeConfig | null>(null);
-  const [serviceFeeStats, setServiceFeeStats] = useState<ServiceFeeStats | null>(null);
-  const [serviceFeeHistory, setServiceFeeHistory] = useState<ServiceFeeHistory[]>([]);
+  const [serviceFeeStats, setServiceFeeStats] =
+    useState<ServiceFeeStats | null>(null);
+  const [serviceFeeHistory, setServiceFeeHistory] = useState<
+    ServiceFeeHistory[]
+  >([]);
   const [feeLoading, setFeeLoading] = useState(false);
-  const [fixedRatePercentage, setFixedRatePercentage] = useState<string>('');
-  const [floatingRatePercentage, setFloatingRatePercentage] = useState<string>('');
+  const [fixedRatePercentage, setFixedRatePercentage] = useState<string>("");
+  const [floatingRatePercentage, setFloatingRatePercentage] =
+    useState<string>("");
 
   // Form state
   const [faqForm, setFaqForm] = useState<CreateFAQRequest>({
-    question: '',
-    answer: '',
+    question: "",
+    answer: "",
     is_active: true,
   });
 
   // Stats loading functions - defined early to be used in useEffect
   const loadFAQStats = React.useCallback(async () => {
     try {
+      console.log("Loading FAQ stats...");
       const stats = await getFAQStats(token);
+      console.log("FAQ stats received:", stats);
       setFaqStats(stats);
     } catch (err) {
-      console.error('Failed to load FAQ stats:', err);
+      console.error("Failed to load FAQ stats:", err);
     }
   }, [token]);
 
@@ -123,18 +165,18 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       const stats = await getTestimonialStats(token);
       setTestimonialStats(stats);
     } catch (err) {
-      console.error('Failed to load testimonial stats:', err);
+      console.error("Failed to load testimonial stats:", err);
     }
   }, [token]);
 
-  const loadServiceFeeStats = React.useCallback(async () => {
-    try {
-      const stats = await getServiceFeeStats(token);
-      setServiceFeeStats(stats);
-    } catch (err) {
-      console.error('Failed to load service fee stats:', err);
-    }
-  }, [token]);
+  //   const loadServiceFeeStats = React.useCallback(async () => {
+  //     try {
+  //       const stats = await getServiceFeeStats(token);
+  //       setServiceFeeStats(stats);
+  //     } catch (err) {
+  //       console.error('Failed to load service fee stats:', err);
+  //     }
+  //   }, [token]);
 
   // Check admin access on mount
   useEffect(() => {
@@ -142,7 +184,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       try {
         const hasAccess = await checkAdminAccess(token);
         if (!hasAccess) {
-          setError('Access denied. Admin privileges required.');
+          setError("Access denied. Admin privileges required.");
           return;
         }
         // Load overview data
@@ -151,29 +193,32 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
           await Promise.all([
             loadFAQStats(),
             loadTestimonialStats(),
-            loadServiceFeeStats(),
+            // loadServiceFeeStats(),
           ]);
         } catch (err) {
-          setError('Failed to load dashboard data.');
+          setError("Failed to load dashboard data.");
         } finally {
           setLoading(false);
         }
       } catch (err) {
-        setError('Failed to verify admin access.');
+        setError("Failed to verify admin access.");
       }
     };
 
     verifyAdminAccess();
-  }, [token, loadFAQStats, loadTestimonialStats, loadServiceFeeStats]);
+  }, [token, loadFAQStats, loadTestimonialStats]);
 
   // FAQ functions
   const loadFAQs = React.useCallback(async () => {
     setFaqLoading(true);
     try {
       const faqData = await getAllFAQs(token);
-      console.log('FAQ data received:', faqData);
-      // Handle the API response structure: { faqs: [...] }
-      if (faqData && typeof faqData === 'object' && 'faqs' in faqData && Array.isArray((faqData as FAQResponse).faqs)) {
+      if (
+        faqData &&
+        typeof faqData === "object" &&
+        "faqs" in faqData &&
+        Array.isArray((faqData as FAQResponse).faqs)
+      ) {
         setFaqs((faqData as FAQResponse).faqs);
       } else if (Array.isArray(faqData)) {
         // Fallback for direct array response
@@ -182,8 +227,8 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
         setFaqs([]);
       }
     } catch (err) {
-      console.error('Failed to load FAQs:', err);
-      setError('Failed to load FAQs.');
+      console.error("Failed to load FAQs:", err);
+      setError("Failed to load FAQs.");
       setFaqs([]); // Ensure it's always an array
     } finally {
       setFaqLoading(false);
@@ -193,12 +238,12 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
   const handleCreateFAQ = async () => {
     try {
       await createFAQ(token, faqForm);
-      setFaqForm({ question: '', answer: '', is_active: true });
+      setFaqForm({ question: "", answer: "", is_active: true });
       setShowFaqDialog(false);
       await loadFAQs();
       await loadFAQStats();
     } catch (err) {
-      setError('Failed to create FAQ.');
+      setError("Failed to create FAQ.");
     }
   };
 
@@ -207,12 +252,12 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
     try {
       await updateFAQ(token, editingFaq.id, faqForm);
       setEditingFaq(null);
-      setFaqForm({ question: '', answer: '', is_active: true });
+      setFaqForm({ question: "", answer: "", is_active: true });
       setShowFaqDialog(false);
       await loadFAQs();
       await loadFAQStats();
     } catch (err) {
-      setError('Failed to update FAQ.');
+      setError("Failed to update FAQ.");
     }
   };
 
@@ -222,7 +267,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       await loadFAQs();
       await loadFAQStats();
     } catch (err) {
-      setError('Failed to delete FAQ.');
+      setError("Failed to delete FAQ.");
     }
   };
 
@@ -230,12 +275,21 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
   const loadTestimonials = React.useCallback(async () => {
     setTestimonialLoading(true);
     try {
-      const isApproved = testimonialFilter === 'all' ? undefined : 
-        testimonialFilter === 'approved' ? true : false;
+      const isApproved =
+        testimonialFilter === "all"
+          ? undefined
+          : testimonialFilter === "approved"
+          ? true
+          : false;
       const testimonialData = await getAllTestimonials(token, isApproved);
-      console.log('Testimonial data received:', testimonialData);
+      console.log("Testimonial data received:", testimonialData);
       // Handle the API response structure: { testimonials: [...] }
-      if (testimonialData && typeof testimonialData === 'object' && 'testimonials' in testimonialData && Array.isArray((testimonialData as TestimonialResponse).testimonials)) {
+      if (
+        testimonialData &&
+        typeof testimonialData === "object" &&
+        "testimonials" in testimonialData &&
+        Array.isArray((testimonialData as TestimonialResponse).testimonials)
+      ) {
         setTestimonials((testimonialData as TestimonialResponse).testimonials);
       } else if (Array.isArray(testimonialData)) {
         // Fallback for direct array response
@@ -244,8 +298,8 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
         setTestimonials([]);
       }
     } catch (err) {
-      console.error('Failed to load testimonials:', err);
-      setError('Failed to load testimonials.');
+      console.error("Failed to load testimonials:", err);
+      setError("Failed to load testimonials.");
       setTestimonials([]); // Ensure it's always an array
     } finally {
       setTestimonialLoading(false);
@@ -258,7 +312,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       await loadTestimonials();
       await loadTestimonialStats();
     } catch (err) {
-      setError('Failed to approve testimonial.');
+      setError("Failed to approve testimonial.");
     }
   };
 
@@ -268,7 +322,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       await loadTestimonials();
       await loadTestimonialStats();
     } catch (err) {
-      setError('Failed to reject testimonial.');
+      setError("Failed to reject testimonial.");
     }
   };
 
@@ -278,7 +332,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       await loadTestimonials();
       await loadTestimonialStats();
     } catch (err) {
-      setError('Failed to delete testimonial.');
+      setError("Failed to delete testimonial.");
     }
   };
 
@@ -290,41 +344,58 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
         getCurrentServiceFeeConfig(token).catch(() => null),
         getServiceFeeHistory(token).catch(() => []),
       ]);
-      
-      console.log('Service fee data loaded:', { history, currentConfig });
-      
+
+      console.log("Service fee data loaded:", { history, currentConfig });
+
       // Ensure history is always an array
       setServiceFeeHistory(Array.isArray(history) ? history : []);
-      
+
       // Set the service fee config
-      setServiceFeeConfig(currentConfig || { 
-        id: '', 
-        percentage: 0, 
-        is_active: true,
-        created_at: '', 
-        updated_at: '' 
-      });
+      setServiceFeeConfig(
+        currentConfig || {
+          id: "",
+          percentage: 0,
+          is_active: true,
+          created_at: "",
+          updated_at: "",
+        }
+      );
+
+      // Set the current values in the input fields based on the current config
+      if (currentConfig && currentConfig.percentage !== undefined) {
+        const percentage = currentConfig.percentage.toString();
+        // Show the current percentage in both fields so user can see current values
+        setFixedRatePercentage(percentage);
+        setFloatingRatePercentage(percentage);
+      } else {
+        // Clear both fields if no config
+        setFixedRatePercentage("");
+        setFloatingRatePercentage("");
+      }
     } catch (err) {
-      console.error('Failed to load service fee data:', err);
-      setError('Failed to load service fee data.');
+      console.error("Failed to load service fee data:", err);
+      setError("Failed to load service fee data.");
       setServiceFeeHistory([]); // Ensure it's always an array
     } finally {
       setFeeLoading(false);
     }
   }, [token]);
 
-  const handleUpdateServiceFee = async (type: 'fixed-rate' | 'floating', percentage: number) => {
+  const handleUpdateServiceFee = async (
+    type: "fixed-rate" | "floating",
+    percentage: number
+  ) => {
     try {
       if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-        setError('Please enter a valid percentage (0-100).');
+        setError("Please enter a valid percentage (0-100).");
         return;
       }
 
       await updateServiceFeeConfig(token, { type, percentage });
       await loadServiceFeeConfig();
-      await loadServiceFeeStats();
+      //   await loadServiceFeeStats();
     } catch (err) {
-      setError('Failed to update service fee.');
+      setError("Failed to update service fee.");
     }
   };
 
@@ -332,14 +403,15 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
     try {
       const percentage = parseFloat(fixedRatePercentage);
       if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-        setError('Please enter a valid fixed rate percentage (0-100).');
+        setError("Please enter a valid fixed rate percentage (0-100).");
         return;
       }
 
-      await handleUpdateServiceFee('fixed-rate', percentage);
-      setFixedRatePercentage('');
+      await updateFixedRateFee(token, percentage);
+      await loadServiceFeeConfig();
+      setFixedRatePercentage("");
     } catch (err) {
-      setError('Failed to update fixed rate.');
+      setError("Failed to update fixed rate.");
     }
   };
 
@@ -347,14 +419,15 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
     try {
       const percentage = parseFloat(floatingRatePercentage);
       if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-        setError('Please enter a valid floating rate percentage (0-100).');
+        setError("Please enter a valid floating rate percentage (0-100).");
         return;
       }
 
-      await handleUpdateServiceFee('floating', percentage);
-      setFloatingRatePercentage('');
+      await updateFloatingRateFee(token, percentage);
+      await loadServiceFeeConfig();
+      setFloatingRatePercentage("");
     } catch (err) {
-      setError('Failed to update floating rate.');
+      setError("Failed to update floating rate.");
     }
   };
 
@@ -362,25 +435,25 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
     try {
       await resetServiceFeeConfig(token);
       await loadServiceFeeConfig();
-      await loadServiceFeeStats();
+      //   await loadServiceFeeStats();
     } catch (err) {
-      setError('Failed to reset service fee.');
+      setError("Failed to reset service fee.");
     }
   };
 
   // Load data when tabs change
   useEffect(() => {
-    if (activeTab === 'faqs') {
+    if (activeTab === "faqs") {
       loadFAQs();
-    } else if (activeTab === 'testimonials') {
+    } else if (activeTab === "testimonials") {
       loadTestimonials();
-    } else if (activeTab === 'fees') {
+    } else if (activeTab === "fees") {
       loadServiceFeeConfig();
     }
   }, [activeTab, loadFAQs, loadServiceFeeConfig, loadTestimonials]);
 
   useEffect(() => {
-    if (activeTab === 'testimonials') {
+    if (activeTab === "testimonials") {
       loadTestimonials();
     }
   }, [activeTab, testimonialFilter, loadTestimonials]);
@@ -403,18 +476,21 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       });
     } else {
       setEditingFaq(null);
-      setFaqForm({ question: '', answer: '', is_active: true });
+      setFaqForm({ question: "", answer: "", is_active: true });
     }
     setShowFaqDialog(true);
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      approved: 'default',
-      pending: 'secondary',
-      rejected: 'destructive',
+    const variants: Record<
+      string,
+      "default" | "secondary" | "destructive" | "outline"
+    > = {
+      approved: "default",
+      pending: "secondary",
+      rejected: "destructive",
     };
-    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+    return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
   };
 
   if (loading) {
@@ -440,7 +516,9 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
             </Button>
             <div>
               <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Manage your platform settings and content</p>
+              <p className="text-muted-foreground">
+                Manage your platform settings and content
+              </p>
             </div>
           </div>
         </div>
@@ -475,9 +553,12 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{faqStats?.total || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {faqStats?.stats?.total || 0}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    {faqStats?.active || 0} active, {faqStats?.inactive || 0} inactive
+                    {faqStats?.stats?.active || 0} active,{" "}
+                    {faqStats?.stats?.inactive || 0} inactive
                   </p>
                 </CardContent>
               </Card>
@@ -485,11 +566,15 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
               {/* Testimonial Stats */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Testimonials</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Testimonials
+                  </CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{testimonialStats?.total || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {testimonialStats?.total || 0}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {testimonialStats?.pending || 0} pending approval
                   </p>
@@ -499,7 +584,9 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
               {/* Service Fee Stats */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Service Fees</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Service Fees
+                  </CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -507,7 +594,9 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                     {serviceFeeStats?.averageFeePercentage?.toFixed(2) || 0}%
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    ${serviceFeeStats?.totalFeesCollected?.toLocaleString() || 0} collected
+                    $
+                    {serviceFeeStats?.totalFeesCollected?.toLocaleString() || 0}{" "}
+                    collected
                   </p>
                 </CardContent>
               </Card>
@@ -536,52 +625,62 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Array.isArray(faqs) && faqs.map((faq) => (
-                      <TableRow key={faq.id}>
-                        <TableCell className="font-medium max-w-md truncate">
-                          {faq.question}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(faq.is_active ? 'active' : 'inactive')}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(faq.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openFaqDialog(faq)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteFAQ(faq.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {Array.isArray(faqs) &&
+                      faqs.map((faq) => (
+                        <TableRow key={faq.id}>
+                          <TableCell className="font-medium max-w-md truncate">
+                            {faq.question}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(
+                              faq.is_active ? "Active" : "Inactive"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(faq.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openFaqDialog(faq)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteFAQ(faq.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     {faqLoading && (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-8">
                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                          <p className="mt-2 text-sm text-muted-foreground">Loading FAQs...</p>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            Loading FAQs...
+                          </p>
                         </TableCell>
                       </TableRow>
                     )}
-                    {!faqLoading && Array.isArray(faqs) && faqs.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8">
-                          <p className="text-muted-foreground">No FAQs found. Create your first FAQ to get started.</p>
-                        </TableCell>
-                      </TableRow>
-                    )}
+                    {!faqLoading &&
+                      Array.isArray(faqs) &&
+                      faqs.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8">
+                            <p className="text-muted-foreground">
+                              No FAQs found. Create your first FAQ to get
+                              started.
+                            </p>
+                          </TableCell>
+                        </TableRow>
+                      )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -592,9 +691,11 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
           <TabsContent value="testimonials" className="mt-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Manage Testimonials</h2>
-              <Select 
-                value={testimonialFilter} 
-                onValueChange={(value: 'all' | 'pending' | 'approved' | 'rejected') => setTestimonialFilter(value)}
+              <Select
+                value={testimonialFilter}
+                onValueChange={(
+                  value: "all" | "pending" | "approved" | "rejected"
+                ) => setTestimonialFilter(value)}
               >
                 <SelectTrigger className="w-40">
                   <SelectValue />
@@ -621,69 +722,88 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Array.isArray(testimonials) && testimonials.map((testimonial) => (
-                      <TableRow key={testimonial.id}>
-                        <TableCell className="font-medium">
-                          {testimonial.user ? `${testimonial.user.first_name} ${testimonial.user.last_name}` : 'Anonymous'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <span className="mr-1">{testimonial.rating}</span>
-                            <span className="text-yellow-500">★</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(testimonial.is_approved ? 'approved' : 'pending')}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(testimonial.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            {!testimonial.is_approved && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleApproveTestimonial(testimonial.id)}
-                                >
-                                  <Check className="w-4 h-4 text-green-600" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRejectTestimonial(testimonial.id)}
-                                >
-                                  <X className="w-4 h-4 text-red-600" />
-                                </Button>
-                              </>
+                    {Array.isArray(testimonials) &&
+                      testimonials.map((testimonial) => (
+                        <TableRow key={testimonial.id}>
+                          <TableCell className="font-medium">
+                            {testimonial.user
+                              ? `${testimonial.user.first_name} ${testimonial.user.last_name}`
+                              : "Anonymous"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <span className="mr-1">{testimonial.rating}</span>
+                              <span className="text-yellow-500">★</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(
+                              testimonial.is_approved ? "approved" : "pending"
                             )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteTestimonial(testimonial.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(
+                              testimonial.created_at
+                            ).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {!testimonial.is_approved && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleApproveTestimonial(testimonial.id)
+                                    }
+                                  >
+                                    <Check className="w-4 h-4 text-green-600" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleRejectTestimonial(testimonial.id)
+                                    }
+                                  >
+                                    <X className="w-4 h-4 text-red-600" />
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleDeleteTestimonial(testimonial.id)
+                                }
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     {testimonialLoading && (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-8">
                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                          <p className="mt-2 text-sm text-muted-foreground">Loading testimonials...</p>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            Loading testimonials...
+                          </p>
                         </TableCell>
                       </TableRow>
                     )}
-                    {!testimonialLoading && Array.isArray(testimonials) && testimonials.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
-                          <p className="text-muted-foreground">No testimonials found for the selected filter.</p>
-                        </TableCell>
-                      </TableRow>
-                    )}
+                    {!testimonialLoading &&
+                      Array.isArray(testimonials) &&
+                      testimonials.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            <p className="text-muted-foreground">
+                              No testimonials found for the selected filter.
+                            </p>
+                          </TableCell>
+                        </TableRow>
+                      )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -692,158 +812,76 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
 
           {/* Service Fees Tab */}
           <TabsContent value="fees" className="mt-6">
-            <div className="grid gap-6">
-              {/* Current Service Fee Configuration */}
+            {/* Service Fee Type Updates */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Fixed Rate Configuration */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Current Service Fee Configuration</CardTitle>
+                  <CardTitle>Set Fixed Rate Fee</CardTitle>
                   <CardDescription>
-                    View and update the current service fee percentage
+                    Set a fixed percentage fee for all transactions
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-4xl font-bold text-primary mb-2">
-                      {serviceFeeConfig?.percentage || 0}%
+                  <div className="space-y-2">
+                    <Label htmlFor="fixed-rate">
+                      Fixed Rate Percentage (%)
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="fixed-rate"
+                        type="text"
+                        value={fixedRatePercentage}
+                        onChange={(e) => setFixedRatePercentage(e.target.value)}
+                        placeholder={(serviceFeeConfig as any).fixedRateFee}
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <Button
+                        onClick={handleUpdateFixedRate}
+                        disabled={!fixedRatePercentage}
+                      >
+                        Set Fixed Rate
+                      </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground">Current Fee Percentage</p>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Service Fee Type Updates */}
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Fixed Rate Configuration */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Set Fixed Rate Fee</CardTitle>
-                    <CardDescription>
-                      Set a fixed percentage fee for all transactions
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="fixed-rate">Fixed Rate Percentage (%)</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="fixed-rate"
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          value={fixedRatePercentage}
-                          onChange={(e) => setFixedRatePercentage(e.target.value)}
-                          placeholder="Enter percentage (0-100)"
-                        />
-                        <Button onClick={handleUpdateFixedRate} disabled={!fixedRatePercentage}>
-                          Set Fixed Rate
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Floating Rate Configuration */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Set Floating Rate Fee</CardTitle>
-                    <CardDescription>
-                      Set a dynamic percentage fee based on market conditions
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="floating-rate">Floating Rate Percentage (%)</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="floating-rate"
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          value={floatingRatePercentage}
-                          onChange={(e) => setFloatingRatePercentage(e.target.value)}
-                          placeholder="Enter percentage (0-100)"
-                        />
-                        <Button onClick={handleUpdateFloatingRate} disabled={!floatingRatePercentage}>
-                          Set Floating Rate
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Fee Statistics */}
+              {/* Floating Rate Configuration */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Fee Statistics</CardTitle>
+                  <CardTitle>Set Floating Rate Fee</CardTitle>
                   <CardDescription>
-                    Overview of collected fees and transactions
+                    Set a dynamic percentage fee based on market conditions
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Collected</p>
-                      <p className="text-2xl font-bold">
-                        ${serviceFeeStats?.totalFeesCollected?.toLocaleString() || 0}
-                      </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="floating-rate">
+                      Floating Rate Percentage (%)
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="floating-rate"
+                        type="text"
+                        value={floatingRatePercentage}
+                        onChange={(e) =>
+                          setFloatingRatePercentage(e.target.value)
+                        }
+                        placeholder={(serviceFeeConfig as any).floatingRateFee}
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <Button
+                        onClick={handleUpdateFloatingRate}
+                        disabled={!floatingRatePercentage}
+                      >
+                        Set Floating Rate
+                      </Button>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Transactions</p>
-                      <p className="text-2xl font-bold">
-                        {serviceFeeStats?.totalTransactions?.toLocaleString() || 0}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="pt-4">
-                    <Button variant="outline" onClick={handleResetServiceFee}>
-                      Reset All to Default
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Fee History */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Fee History</CardTitle>
-                <CardDescription>
-                  Recent changes to service fee configuration
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Percentage</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Array.isArray(serviceFeeHistory) && serviceFeeHistory.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell className="font-medium">
-                          {entry.percentage}%
-                        </TableCell>
-                        <TableCell>
-                          {new Date(entry.created_at).toLocaleDateString()}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {!Array.isArray(serviceFeeHistory) || serviceFeeHistory.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={2} className="text-center py-8">
-                          <p className="text-muted-foreground">No fee history found.</p>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </div>
@@ -853,7 +891,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingFaq ? 'Edit FAQ' : 'Create New FAQ'}
+              {editingFaq ? "Edit FAQ" : "Create New FAQ"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -862,7 +900,9 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
               <Input
                 id="question"
                 value={faqForm.question}
-                onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
+                onChange={(e) =>
+                  setFaqForm({ ...faqForm, question: e.target.value })
+                }
                 placeholder="Enter the FAQ question"
               />
             </div>
@@ -871,7 +911,9 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
               <Textarea
                 id="answer"
                 value={faqForm.answer}
-                onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
+                onChange={(e) =>
+                  setFaqForm({ ...faqForm, answer: e.target.value })
+                }
                 placeholder="Enter the FAQ answer"
                 rows={6}
               />
@@ -880,7 +922,9 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
               <Switch
                 id="active"
                 checked={faqForm.is_active}
-                onCheckedChange={(checked) => setFaqForm({ ...faqForm, is_active: checked })}
+                onCheckedChange={(checked) =>
+                  setFaqForm({ ...faqForm, is_active: checked })
+                }
               />
               <Label htmlFor="active">Active</Label>
             </div>
@@ -889,7 +933,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                 Cancel
               </Button>
               <Button onClick={editingFaq ? handleUpdateFAQ : handleCreateFAQ}>
-                {editingFaq ? 'Update' : 'Create'}
+                {editingFaq ? "Update" : "Create"}
               </Button>
             </div>
           </div>

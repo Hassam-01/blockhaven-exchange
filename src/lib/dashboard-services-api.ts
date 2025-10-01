@@ -1,6 +1,6 @@
 // Dashboard Services API - Admin-only endpoints
 
-import { API_CONFIG, getHeaders, HTTP_METHODS } from './api-config';
+import { API_CONFIG, getHeaders, HTTP_METHODS } from "./api-config";
 
 // Import types from user services
 import type {
@@ -11,13 +11,15 @@ import type {
   ServiceFeeConfig,
   SetServiceFeeRequest,
   ServiceFeeCalculation,
-} from './user-services-api';
+} from "./user-services-api";
 
 // Additional types for admin endpoints
 export interface FAQStats {
-  total: number;
-  active: number;
-  inactive: number;
+  stats: {
+    total: number;
+    active: number;
+    inactive: number;
+  };
 }
 
 export interface TestimonialStats {
@@ -66,23 +68,27 @@ const apiCall = async <T>(
   const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options.headers,
     },
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.message ||
+        errorData.error ||
+        `HTTP error! status: ${response.status}`
+    );
   }
 
   const result = await response.json();
-  
+
   // Check if the response has the expected wrapper structure
   if (result.success === false) {
-    throw new Error(result.message || result.error || 'API request failed');
+    throw new Error(result.message || result.error || "API request failed");
   }
-  
+
   // Return the data directly if it's wrapped, otherwise return the result as-is
   return result.data !== undefined ? result.data : result;
 };
@@ -97,19 +103,24 @@ export const getAllFAQs = async (
   search?: string
 ): Promise<FAQ[]> => {
   const params = new URLSearchParams();
-  if (isActive !== undefined) params.append('is_active', isActive.toString());
-  if (search) params.append('search', search);
-  
+  if (isActive !== undefined) params.append("is_active", isActive.toString());
+  if (search) params.append("search", search);
+
   const queryString = params.toString();
-  const endpoint = `${API_CONFIG.ENDPOINTS.FAQS.BASE}${queryString ? `?${queryString}` : ''}`;
-  
+  const endpoint = `${API_CONFIG.ENDPOINTS.FAQS.BASE}${
+    queryString ? `?${queryString}` : ""
+  }`;
+
   return apiCall<FAQ[]>(endpoint, {
     method: HTTP_METHODS.GET,
     headers: getAuthHeaders(token),
   });
 };
 
-export const createFAQ = async (token: string, data: CreateFAQRequest): Promise<FAQ> => {
+export const createFAQ = async (
+  token: string,
+  data: CreateFAQRequest
+): Promise<FAQ> => {
   return apiCall<FAQ>(API_CONFIG.ENDPOINTS.FAQS.BASE, {
     method: HTTP_METHODS.POST,
     headers: getAuthHeaders(token),
@@ -133,10 +144,13 @@ export const deleteFAQ = async (
   token: string,
   id: string
 ): Promise<{ success: boolean; message: string }> => {
-  return apiCall<{ success: boolean; message: string }>(`${API_CONFIG.ENDPOINTS.FAQS.BASE}/${id}`, {
-    method: HTTP_METHODS.DELETE,
-    headers: getAuthHeaders(token),
-  });
+  return apiCall<{ success: boolean; message: string }>(
+    `${API_CONFIG.ENDPOINTS.FAQS.BASE}/${id}`,
+    {
+      method: HTTP_METHODS.DELETE,
+      headers: getAuthHeaders(token),
+    }
+  );
 };
 
 export const toggleFAQStatus = async (
@@ -174,11 +188,14 @@ export const bulkUpdateFAQStatus = async (
   token: string,
   data: BulkStatusRequest
 ): Promise<{ success: boolean; updated: number; message: string }> => {
-  return apiCall<{ success: boolean; updated: number; message: string }>(API_CONFIG.ENDPOINTS.FAQS.BULK_STATUS, {
-    method: HTTP_METHODS.POST,
-    headers: getAuthHeaders(token),
-    body: JSON.stringify(data),
-  });
+  return apiCall<{ success: boolean; updated: number; message: string }>(
+    API_CONFIG.ENDPOINTS.FAQS.BULK_STATUS,
+    {
+      method: HTTP_METHODS.POST,
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    }
+  );
 };
 
 // =============================================================================
@@ -192,73 +209,98 @@ export const getAllTestimonials = async (
   userId?: string
 ): Promise<Testimonial[]> => {
   const params = new URLSearchParams();
-  if (isApproved !== undefined) params.append('is_approved', isApproved.toString());
-  if (rating !== undefined) params.append('rating', rating.toString());
-  if (userId) params.append('userId', userId);
-  
+  if (isApproved !== undefined)
+    params.append("is_approved", isApproved.toString());
+  if (rating !== undefined) params.append("rating", rating.toString());
+  if (userId) params.append("userId", userId);
+
   const queryString = params.toString();
-  const endpoint = `${API_CONFIG.ENDPOINTS.TESTIMONIALS.BASE}${queryString ? `?${queryString}` : ''}`;
-  
+  const endpoint = `${API_CONFIG.ENDPOINTS.TESTIMONIALS.BASE}${
+    queryString ? `?${queryString}` : ""
+  }`;
+
   return apiCall<Testimonial[]>(endpoint, {
     method: HTTP_METHODS.GET,
     headers: getAuthHeaders(token),
   });
 };
 
-export const getPendingTestimonials = async (token: string): Promise<Testimonial[]> => {
-  return apiCall<Testimonial[]>(API_CONFIG.ENDPOINTS.TESTIMONIALS.ADMIN_PENDING, {
-    method: HTTP_METHODS.GET,
-    headers: getAuthHeaders(token),
-  });
+export const getPendingTestimonials = async (
+  token: string
+): Promise<Testimonial[]> => {
+  return apiCall<Testimonial[]>(
+    API_CONFIG.ENDPOINTS.TESTIMONIALS.ADMIN_PENDING,
+    {
+      method: HTTP_METHODS.GET,
+      headers: getAuthHeaders(token),
+    }
+  );
 };
 
-export const getTestimonialStats = async (token: string): Promise<TestimonialStats> => {
-  return apiCall<TestimonialStats>(API_CONFIG.ENDPOINTS.TESTIMONIALS.ADMIN_STATS, {
-    method: HTTP_METHODS.GET,
-    headers: getAuthHeaders(token),
-  });
+export const getTestimonialStats = async (
+  token: string
+): Promise<TestimonialStats> => {
+  return apiCall<TestimonialStats>(
+    API_CONFIG.ENDPOINTS.TESTIMONIALS.ADMIN_STATS,
+    {
+      method: HTTP_METHODS.GET,
+      headers: getAuthHeaders(token),
+    }
+  );
 };
 
 export const approveTestimonial = async (
   token: string,
   id: string
 ): Promise<Testimonial> => {
-  return apiCall<Testimonial>(`${API_CONFIG.ENDPOINTS.TESTIMONIALS.BASE}/${id}/approve`, {
-    method: HTTP_METHODS.PATCH,
-    headers: getAuthHeaders(token),
-  });
+  return apiCall<Testimonial>(
+    `${API_CONFIG.ENDPOINTS.TESTIMONIALS.BASE}/${id}/approve`,
+    {
+      method: HTTP_METHODS.PATCH,
+      headers: getAuthHeaders(token),
+    }
+  );
 };
 
 export const rejectTestimonial = async (
   token: string,
   id: string
 ): Promise<Testimonial> => {
-  return apiCall<Testimonial>(`${API_CONFIG.ENDPOINTS.TESTIMONIALS.BASE}/${id}/reject`, {
-    method: HTTP_METHODS.PATCH,
-    headers: getAuthHeaders(token),
-  });
+  return apiCall<Testimonial>(
+    `${API_CONFIG.ENDPOINTS.TESTIMONIALS.BASE}/${id}/reject`,
+    {
+      method: HTTP_METHODS.PATCH,
+      headers: getAuthHeaders(token),
+    }
+  );
 };
 
 export const bulkApproveTestimonials = async (
   token: string,
   data: BulkTestimonialRequest
 ): Promise<{ success: boolean; approved: number; message: string }> => {
-  return apiCall<{ success: boolean; approved: number; message: string }>(API_CONFIG.ENDPOINTS.TESTIMONIALS.BULK_APPROVE, {
-    method: HTTP_METHODS.POST,
-    headers: getAuthHeaders(token),
-    body: JSON.stringify(data),
-  });
+  return apiCall<{ success: boolean; approved: number; message: string }>(
+    API_CONFIG.ENDPOINTS.TESTIMONIALS.BULK_APPROVE,
+    {
+      method: HTTP_METHODS.POST,
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    }
+  );
 };
 
 export const bulkRejectTestimonials = async (
   token: string,
   data: BulkTestimonialRequest
 ): Promise<{ success: boolean; rejected: number; message: string }> => {
-  return apiCall<{ success: boolean; rejected: number; message: string }>(API_CONFIG.ENDPOINTS.TESTIMONIALS.BULK_REJECT, {
-    method: HTTP_METHODS.POST,
-    headers: getAuthHeaders(token),
-    body: JSON.stringify(data),
-  });
+  return apiCall<{ success: boolean; rejected: number; message: string }>(
+    API_CONFIG.ENDPOINTS.TESTIMONIALS.BULK_REJECT,
+    {
+      method: HTTP_METHODS.POST,
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    }
+  );
 };
 
 // =============================================================================
@@ -267,7 +309,7 @@ export const bulkRejectTestimonials = async (
 
 export const updateServiceFeeConfig = async (
   token: string,
-  data: { type: 'fixed-rate' | 'floating'; percentage: number }
+  data: { type: "fixed-rate" | "floating"; percentage: number }
 ): Promise<ServiceFeeConfig> => {
   return apiCall<ServiceFeeConfig>(API_CONFIG.ENDPOINTS.SERVICE_FEES.BASE, {
     method: HTTP_METHODS.PUT,
@@ -276,35 +318,65 @@ export const updateServiceFeeConfig = async (
   });
 };
 
+// New functions to match backend API structure
+export const updateFixedRateFee = async (
+  token: string,
+  fixedRateFee: number
+): Promise<ServiceFeeConfig> => {
+  return apiCall<ServiceFeeConfig>(API_CONFIG.ENDPOINTS.SERVICE_FEES.BASE, {
+    method: HTTP_METHODS.PUT,
+    headers: getAuthHeaders(token),
+    body: JSON.stringify({ fixedRateFee }),
+  });
+};
+
+export const updateFloatingRateFee = async (
+  token: string,
+  floatingRateFee: number
+): Promise<ServiceFeeConfig> => {
+  return apiCall<ServiceFeeConfig>(API_CONFIG.ENDPOINTS.SERVICE_FEES.BASE, {
+    method: HTTP_METHODS.PUT,
+    headers: getAuthHeaders(token),
+    body: JSON.stringify({ floatingRateFee }),
+  });
+};
+
 export const setFloatingRate = async (
   token: string,
   data: { percentage: number }
 ): Promise<ServiceFeeConfig> => {
-  return updateServiceFeeConfig(token, { type: 'floating', percentage: data.percentage });
+  return updateFloatingRateFee(token, data.percentage);
 };
 
 export const setFixedRate = async (
   token: string,
   data: { percentage: number }
 ): Promise<ServiceFeeConfig> => {
-  return updateServiceFeeConfig(token, { type: 'fixed-rate', percentage: data.percentage });
+  return updateFixedRateFee(token, data.percentage);
 };
 
-export const getServiceFeeHistory = async (token: string): Promise<ServiceFeeHistory[]> => {
-  return apiCall<ServiceFeeHistory[]>(API_CONFIG.ENDPOINTS.SERVICE_FEES.HISTORY, {
-    method: HTTP_METHODS.GET,
-    headers: getAuthHeaders(token),
-  });
+export const getServiceFeeHistory = async (
+  token: string
+): Promise<ServiceFeeHistory[]> => {
+  return apiCall<ServiceFeeHistory[]>(
+    API_CONFIG.ENDPOINTS.SERVICE_FEES.HISTORY,
+    {
+      method: HTTP_METHODS.GET,
+      headers: getAuthHeaders(token),
+    }
+  );
 };
 
-export const getServiceFeeStats = async (token: string): Promise<ServiceFeeStats> => {
-  return apiCall<ServiceFeeStats>(API_CONFIG.ENDPOINTS.SERVICE_FEES.STATS, {
-    method: HTTP_METHODS.GET,
-    headers: getAuthHeaders(token),
-  });
-};
+// export const getServiceFeeStats = async (token: string): Promise<ServiceFeeStats> => {
+//   return apiCall<ServiceFeeStats>(API_CONFIG.ENDPOINTS.SERVICE_FEES.STATS, {
+//     method: HTTP_METHODS.GET,
+//     headers: getAuthHeaders(token),
+//   });
+// };
 
-export const getCurrentServiceFeeConfig = async (token: string): Promise<ServiceFeeConfig> => {
+export const getCurrentServiceFeeConfig = async (
+  token: string
+): Promise<ServiceFeeConfig> => {
   return apiCall<ServiceFeeConfig>(API_CONFIG.ENDPOINTS.SERVICE_FEES.BASE, {
     method: HTTP_METHODS.GET,
     headers: getAuthHeaders(token),
@@ -312,12 +384,16 @@ export const getCurrentServiceFeeConfig = async (token: string): Promise<Service
 };
 
 // Legacy functions for backward compatibility - now use the unified config
-export const getCurrentFixedRate = async (token: string): Promise<{ percentage: number }> => {
+export const getCurrentFixedRate = async (
+  token: string
+): Promise<{ percentage: number }> => {
   const config = await getCurrentServiceFeeConfig(token);
   return { percentage: config.percentage || 0 };
 };
 
-export const getCurrentFloatingRate = async (token: string): Promise<{ percentage: number }> => {
+export const getCurrentFloatingRate = async (
+  token: string
+): Promise<{ percentage: number }> => {
   const config = await getCurrentServiceFeeConfig(token);
   return { percentage: config.percentage || 0 };
 };
@@ -335,7 +411,11 @@ export const validateServiceFeeConfig = async (
   token: string,
   data: SetServiceFeeRequest
 ): Promise<{ valid: boolean; message: string; config?: ServiceFeeConfig }> => {
-  return apiCall<{ valid: boolean; message: string; config?: ServiceFeeConfig }>(API_CONFIG.ENDPOINTS.SERVICE_FEES.VALIDATE, {
+  return apiCall<{
+    valid: boolean;
+    message: string;
+    config?: ServiceFeeConfig;
+  }>(API_CONFIG.ENDPOINTS.SERVICE_FEES.VALIDATE, {
     method: HTTP_METHODS.POST,
     headers: getAuthHeaders(token),
     body: JSON.stringify(data),
@@ -351,7 +431,7 @@ export const handleApiError = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message;
   }
-  return 'An unexpected error occurred. Please try again.';
+  return "An unexpected error occurred. Please try again.";
 };
 
 // Function to check if user has admin privileges (based on token payload)
@@ -371,12 +451,12 @@ export const checkAdminAccess = async (token: string): Promise<boolean> => {
 
 // Function to format dates consistently across the dashboard
 export const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -387,8 +467,8 @@ export const formatPercentage = (value: number): string => {
 
 // Function to format currency values
 export const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   }).format(value);
 };

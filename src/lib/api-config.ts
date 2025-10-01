@@ -36,7 +36,7 @@ export const API_CONFIG = {
       SET_FLOATING: '/api/service-fees/set-floating',
       SET_FIXED: '/api/service-fees/set-fixed',
       HISTORY: '/api/service-fees/history',
-      STATS: '/api/service-fees/stats',
+    //   STATS: '/api/service-fees/stats',
       RESET: '/api/service-fees/reset',
       VALIDATE: '/api/service-fees/validate',
     },

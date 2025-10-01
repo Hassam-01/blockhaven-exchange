@@ -89,7 +89,7 @@ export function UserProfilePopover({ user, onLogout, onDashboard }: UserProfileP
               Profile
             </Button>
 
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               className="w-full justify-start gap-3 h-9"
@@ -97,9 +97,9 @@ export function UserProfilePopover({ user, onLogout, onDashboard }: UserProfileP
             >
               <CreditCard className="h-4 w-4" />
               Transaction History
-            </Button>
+            </Button> */}
 
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               className="w-full justify-start gap-3 h-9"
@@ -107,7 +107,7 @@ export function UserProfilePopover({ user, onLogout, onDashboard }: UserProfileP
             >
               <Settings className="h-4 w-4" />
               Settings
-            </Button>
+            </Button> */}
           </div>
 
           {/* Logout */}
