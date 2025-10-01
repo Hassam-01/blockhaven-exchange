@@ -4,12 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const features = [
   {
-    icon: Shield,
-    title: 'Bank-Grade Security',
-    description: 'Multi-layered security protocols with cold storage and insurance coverage to protect your assets.',
-    color: 'text-success'
-  },
-  {
     icon: Zap,
     title: 'Lightning Fast',
     description: 'Execute trades in seconds with our optimized matching engine and instant settlement.',
@@ -17,15 +11,9 @@ const features = [
   },
   {
     icon: Globe,
-    title: '300+ Cryptocurrencies', 
+    title: '900+ Cryptocurrencies', 
     description: 'Access the largest selection of digital assets from Bitcoin to emerging DeFi tokens.',
     color: 'text-primary'
-  },
-  {
-    icon: Lock,
-    title: 'Non-Custodial',
-    description: 'You maintain full control of your private keys. We never hold your funds.',
-    color: 'text-accent'
   },
   {
     icon: TrendingUp,
@@ -59,7 +47,7 @@ export function WhyBlockHaven() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-8">
           {features?.map((feature, index) => (
             <Card key={index} className="bg-card border-border hover:border-primary/30 transition-all duration-300 hover:shadow-card group">
               <CardContent className="p-8 text-center">
