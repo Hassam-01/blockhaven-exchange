@@ -886,7 +886,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                         type="text"
                         value={fixedRatePercentage}
                         onChange={(e) => setFixedRatePercentage(e.target.value)}
-                        placeholder="Enter percentage (0-100)"
+                        placeholder={(serviceFeeConfig as any)?.fixedRateFee || "Enter percentage"}
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <Button
@@ -921,7 +921,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                         onChange={(e) =>
                           setFloatingRatePercentage(e.target.value)
                         }
-                        placeholder="Enter percentage (0-100)"
+                        placeholder={(serviceFeeConfig as any)?.floatingRateFee || "Enter percentage"}
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <Button

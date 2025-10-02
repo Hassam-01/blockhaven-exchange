@@ -32,6 +32,13 @@ import {
   getTransactionStatus,
   getExchangeRange,
 } from "@/lib/changenow-api-v2";
+import { getCurrentServiceFee, ServiceFeeConfig } from "@/lib/user-services-api";
+
+// Enhanced interface to handle potential separate rates from backend
+interface EnhancedServiceFeeConfig extends ServiceFeeConfig {
+  fixedRateFee?: number;
+  floatingRateFee?: number;
+}
 import { CurrencyInput } from "./CurrencyInput";
 import { ExchangeTypeSelector } from "./ExchangeTypeSelector";
 import { WalletAddressInput } from "./WalletAddressInput";
@@ -73,6 +80,7 @@ export function ExchangeWidget() {
   const [exchangeType, setExchangeType] = useState<"fixed" | "floating">(
     "fixed"
   );
+  const [serviceFeeConfig, setServiceFeeConfig] = useState<EnhancedServiceFeeConfig | null>(null);
   const { toast } = useToast();
 
   // Memoize filtered currencies for better performance
@@ -86,17 +94,53 @@ export function ExchangeWidget() {
       });
   }, [allCurrencies]);
 
-  // Exchange type charges
+  // Exchange type charges - dynamically generated from backend data
   const exchangeCharges = useMemo(
-    () => ({
-      fixed: {
-        rate: 1.0,
-        description: "Fixed rate - guaranteed for 15 minutes",
-      },
-      floating: { rate: 0.5, description: "Floating rate - best market price" },
-    }),
-    []
+    () => {
+      const fixedRate = serviceFeeConfig?.fixedRateFee
+      
+      const floatingRate = serviceFeeConfig?.floatingRateFee
+      
+      console.log("Exchange charges calculated:", { 
+        fixedRate, 
+        floatingRate, 
+        serviceFeeConfig,
+        hasFixedRateFee: !!serviceFeeConfig?.fixedRateFee,
+        hasFloatingRateFee: !!serviceFeeConfig?.floatingRateFee,
+        hasPercentage: !!serviceFeeConfig?.percentage
+      });
+      
+      return {
+        fixed: {
+          rate: fixedRate,
+          description: "Fixed rate - guaranteed for 15 minutes",
+        },
+        floating: { 
+          rate: floatingRate,
+          description: "Floating rate - best market price" 
+        },
+      };
+    },
+    [serviceFeeConfig]
   );
+
+  // Fetch service fee configuration on component mount
+  useEffect(() => {
+    const fetchServiceFeeConfig = async () => {
+      try {
+        const config = await getCurrentServiceFee();
+        console.log("Fetched service fee config:", config);
+        setServiceFeeConfig(config as EnhancedServiceFeeConfig);
+      } catch (error) {
+        console.error("Failed to fetch service fee configuration:", error);
+        console.log("Using default fallback rates for exchange widget");
+        // Don't show toast error for service fees as it's not critical for basic functionality
+        // We'll use default rates as fallback
+      }
+    };
+
+    fetchServiceFeeConfig();
+  }, []);
 
   // Fetch all currencies on component mount
   useEffect(() => {

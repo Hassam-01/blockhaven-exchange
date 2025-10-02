@@ -29,7 +29,7 @@ export const API_CONFIG = {
     },
     // Service fee endpoints
     SERVICE_FEES: {
-      CURRENT: '/api/service-fees/current',
+      CURRENT: '/api/service-fees/',
       CALCULATE: '/api/service-fees/calculate',
       CALCULATE_BASE: '/api/service-fees/calculate-base',
       BASE: '/api/service-fees',
