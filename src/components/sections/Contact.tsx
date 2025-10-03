@@ -11,7 +11,6 @@ export function Contact() {
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
-    phone: '',
     subject: '',
     message: ''
   });
@@ -30,7 +29,7 @@ export function Contact() {
         description: "Thank you for contacting us. We'll get back to you within 24 hours.",
       });
 
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
       toast({
         title: "Error",
@@ -60,69 +59,28 @@ export function Contact() {
               Touch
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Have questions or need support? Our team is here to help you succeed in your crypto journey.
           </p>
+          <div className="flex items-center justify-center gap-2 text-lg">
+            <Mail className="w-5 h-5 text-primary" />
+            <span className="text-muted-foreground">Contact us directly at:</span>
+            <a 
+              href="mailto:support@blockhaven.com" 
+              className="text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              support@blockhaven.com
+            </a>
+          </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {/* Contact Information */}
-          <div className="space-y-12">
-            <Card className="bg-card border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <MessageCircle className="w-8 h-8 text-primary" />
-                  <div>
-                    <h3 className="font-bold text-lg">Live Chat</h3>
-                    <p className="text-muted-foreground">Get instant support</p>
-                  </div>
-                </div>
-                <Button variant="crypto" className="w-full">
-                  Start Chat
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <Mail className="w-8 h-8 text-accent" />
-                  <div>
-                    <h3 className="font-bold text-lg">Email Support</h3>
-                    <p className="text-muted-foreground">support@blockhaven.com</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span>Response within 24 hours</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <Phone className="w-8 h-8 text-success" />
-                  <div>
-                    <h3 className="font-bold text-lg">Phone Support</h3>
-                    <p className="text-muted-foreground">+1 (555) 123-4567</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span>24/7 Available</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Contact Form */}
-          <div className="lg:col-span-2">
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold">Send us a Message</CardTitle>
-              </CardHeader>
-              <CardContent>
+        {/* Centered Contact Form */}
+        <div className="max-w-2xl mx-auto">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-center">Send us a Message</CardTitle>
+            </CardHeader>
+            <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
@@ -154,34 +112,18 @@ export function Contact() {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium mb-2">
-                        Phone Number
-                      </label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                        placeholder="+1234567890"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="subject" className="block text-sm font-medium mb-2">
-                        Subject
-                      </label>
-                      <Input
-                        id="subject"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                        placeholder="Inquiry about services"
-                      />
-                    </div>
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium mb-2">
+                      Subject
+                    </label>
+                    <Input
+                      id="subject"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleChange}
+                      required
+                      placeholder="Inquiry about services"
+                    />
                   </div>
 
                   <div>
@@ -213,7 +155,6 @@ export function Contact() {
               </CardContent>
             </Card>
           </div>
-        </div>
       </div>
     </section>
   );

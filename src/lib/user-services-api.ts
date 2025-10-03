@@ -131,13 +131,71 @@ export interface SetServiceFeeRequest {
 // Utility function to get auth headers
 const getAuthHeaders = (token?: string) => getHeaders(token);
 
+// Function to handle token expiration and logout
+const handleTokenExpiration = () => {
+  // Remove token and user data from localStorage
+  localStorage.removeItem("auth_token");
+  localStorage.removeItem("user_data");
+  
+  // Trigger auth state change event to update UI
+  window.dispatchEvent(new CustomEvent("auth-state-changed"));
+  
+  // Optionally show a notification to the user
+  console.warn("Session expired. Please log in again.");
+};
+
+// Utility function to manually logout a user (can be used by components)
+export const logoutUser = () => {
+  handleTokenExpiration();
+};
+
+// Utility function to check if user is authenticated
+export const isAuthenticated = (): boolean => {
+  const token = localStorage.getItem("auth_token");
+  return !!token;
+};
+
+// Utility function to get current auth token
+export const getCurrentAuthToken = (): string | null => {
+  return localStorage.getItem("auth_token");
+};
+
+// Utility function to get current user data
+export const getCurrentUser = (): User | null => {
+  try {
+    const userData = localStorage.getItem("user_data");
+    if (userData) {
+      return JSON.parse(userData);
+    }
+  } catch (error) {
+    console.error("Error parsing user data:", error);
+    // Clear invalid data
+    localStorage.removeItem("user_data");
+  }
+  return null;
+};
+
+// Utility function to validate current token by making a profile request
+export const validateCurrentToken = async (): Promise<boolean> => {
+  try {
+    const token = getCurrentAuthToken();
+    if (!token) return false;
+    
+    // Try to get user profile to validate token
+    await getUserProfile(token);
+    return true;
+  } catch (error) {
+    // Token is invalid or expired, handleTokenExpiration will be called by apiCall
+    return false;
+  }
+};
+
 // Generic API call function
 const apiCall = async <T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> => {
   const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -147,6 +205,20 @@ const apiCall = async <T>(
   });
 
   if (!response.ok) {
+    // Check if the error is due to token expiration (401 Unauthorized)
+    if (response.status === 401) {
+      // Check if this request was using authentication
+      const authHeader = options.headers && 
+        (options.headers as Record<string, string>)['Authorization'];
+      
+      if (authHeader) {
+        // This was an authenticated request that failed with 401
+        // Handle token expiration
+        handleTokenExpiration();
+        throw new Error("Session expired. Please log in again.");
+      }
+    }
+
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
       errorData.message ||
@@ -262,15 +334,12 @@ export const getPublicTestimonials = async (
 ): Promise<Testimonial[]> => {
   const ratingParam = rating ? `?rating=${rating}` : "";
   const endpoint = `${API_CONFIG.ENDPOINTS.TESTIMONIALS.PUBLIC}${ratingParam}`;
-  console.log(
-    "Fetching testimonials from:",
-    `${API_CONFIG.BASE_URL}${endpoint}`
-  );
+
   try {
     const response = await apiCall<{ testimonials: Testimonial[] }>(endpoint);
     return response.testimonials || [];
   } catch (error) {
-    throw new Error("")
+    throw new Error("");
   }
 };
 
@@ -278,15 +347,19 @@ export const getPublicTestimonials = async (
 export const getMyTestimonial = async (
   token: string
 ): Promise<Testimonial | null> => {
+  if (!token) return null;
   try {
-    const response = await apiCall<{ testimonial: Testimonial } | null>(API_CONFIG.ENDPOINTS.TESTIMONIALS.MY, {
-      method: HTTP_METHODS.GET,
-      headers: getAuthHeaders(token),
-    });
+    const response = await apiCall<{ testimonial: Testimonial } | null>(
+      API_CONFIG.ENDPOINTS.TESTIMONIALS.MY,
+      {
+        method: HTTP_METHODS.GET,
+        headers: getAuthHeaders(token),
+      }
+    );
     return response?.testimonial || null;
   } catch (error) {
     // If no testimonial exists, the API might return 404 or empty response
-    console.error('Failed to get my testimonial:', error);
+    console.error("Failed to get my testimonial:", error);
     return null;
   }
 };

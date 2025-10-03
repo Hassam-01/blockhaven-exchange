@@ -24,6 +24,8 @@ import {
   createTestimonial,
   updateTestimonial,
   deleteTestimonial,
+  getCurrentAuthToken,
+  isAuthenticated,
 } from "@/lib/user-services-api";
 import type {
   Testimonial,
@@ -46,14 +48,13 @@ export function Testimonials() {
   const [text, setText] = useState("");
 
   // Check if user is logged in
-  const authToken = localStorage.getItem("auth_token");
-  const isLoggedIn = !!authToken;
+  const authToken = getCurrentAuthToken();
+  const isLoggedIn = isAuthenticated();
 
   // Load public testimonials
   const loadTestimonials = async () => {
     try {
       const data = await getPublicTestimonials();
-      console.log("testimonial data:", data);
       setTestimonials(data || []);
     } catch (err) {
       console.error("Failed to load testimonials:", err);
@@ -67,7 +68,6 @@ export function Testimonials() {
 
     try {
       const data = await getMyTestimonial(authToken);
-      console.log("my: ", data);
       setMyTestimonial(data);
     } catch (err) {
       console.error("Failed to load my testimonial:", err);
@@ -242,7 +242,10 @@ export function Testimonials() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 ">
             {/* User's own testimonial (if exists) */}
             {myTestimonial && (
-              <Card key={myTestimonial.id} className="h-full min-h-[280px] relative border-primary/50">
+              <Card
+                key={myTestimonial.id}
+                className="h-full min-h-[280px] relative border-primary/50"
+              >
                 {/* Edit/Delete actions */}
                 <div className="absolute top-2 right-2 flex gap-1">
                   <Button
@@ -262,11 +265,13 @@ export function Testimonials() {
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-                
+
                 {/* Status badge */}
                 <div className="absolute top-2 left-2">
                   <Badge
-                    variant={myTestimonial.is_approved ? "default" : "secondary"}
+                    variant={
+                      myTestimonial.is_approved ? "default" : "secondary"
+                    }
                     className="text-xs"
                   >
                     {myTestimonial.is_approved ? "Approved" : "Pending"}
@@ -290,7 +295,9 @@ export function Testimonials() {
                   </div>
 
                   {/* Stars below the text */}
-                  <div className="mb-4">{renderStars(myTestimonial.rating)}</div>
+                  <div className="mb-4">
+                    {renderStars(myTestimonial.rating)}
+                  </div>
 
                   {/* User info and date at bottom */}
                   <div className="flex items-center justify-between mt-auto">

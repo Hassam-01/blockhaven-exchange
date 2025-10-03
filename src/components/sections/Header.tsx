@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SignInPopover } from "@/components/auth/SignInPopover";
 import { UserProfilePopover } from "@/components/auth/UserProfilePopover";
+import { getCurrentUser, getCurrentAuthToken, validateCurrentToken } from "@/lib/user-services-api";
 import type { User } from "@/lib/user-services-api";
 
 interface HeaderProps {
@@ -14,34 +15,52 @@ export function Header({ onDashboardOpen }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const tokenValidationInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Check for existing user session on component mount
   useEffect(() => {
     const checkAuthStatus = () => {
       try {
-        const token = localStorage.getItem("auth_token");
-        const userData = localStorage.getItem("user_data");
+        const token = getCurrentAuthToken();
+        const userData = getCurrentUser();
 
         if (token && userData) {
-          try {
-            const parsedUser = JSON.parse(userData);
-            setUser(parsedUser);
-          } catch (parseError) {
-            // Clear invalid data
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("user_data");
-          }
+          setUser(userData);
+        } else {
+          setUser(null);
         }
       } catch (error) {
-        // Clear invalid data
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("user_data");
+        console.error("Error checking auth status:", error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuthStatus();
+
+    // Set up periodic token validation (every 5 minutes)
+    const startTokenValidation = () => {
+      if (tokenValidationInterval.current) {
+        clearInterval(tokenValidationInterval.current);
+      }
+      
+      tokenValidationInterval.current = setInterval(async () => {
+        const token = getCurrentAuthToken();
+        if (token) {
+          const isValid = await validateCurrentToken();
+          if (!isValid) {
+            // Token is invalid, user will be logged out automatically by validateCurrentToken
+            setUser(null);
+          }
+        }
+      }, 5 * 60 * 1000); // 5 minutes
+    };
+
+    // Start token validation if user is logged in
+    if (getCurrentAuthToken()) {
+      startTokenValidation();
+    }
 
     // Listen for storage changes (e.g., login/logout in another tab)
     const handleStorageChange = () => {
@@ -51,6 +70,16 @@ export function Header({ onDashboardOpen }: HeaderProps) {
     // Listen for auth state changes (e.g., login/logout)
     const handleAuthStateChange = () => {
       checkAuthStatus();
+      // Restart token validation based on new auth state
+      const token = getCurrentAuthToken();
+      if (token) {
+        startTokenValidation();
+      } else {
+        if (tokenValidationInterval.current) {
+          clearInterval(tokenValidationInterval.current);
+          tokenValidationInterval.current = null;
+        }
+      }
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -59,6 +88,11 @@ export function Header({ onDashboardOpen }: HeaderProps) {
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("auth-state-changed", handleAuthStateChange);
+      
+      // Clean up interval
+      if (tokenValidationInterval.current) {
+        clearInterval(tokenValidationInterval.current);
+      }
     };
   }, []);
 

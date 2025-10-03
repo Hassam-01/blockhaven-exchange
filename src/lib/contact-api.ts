@@ -3,7 +3,7 @@ import { API_CONFIG, getHeaders, HTTP_METHODS } from './api-config';
 export interface ContactFormData {
   name: string;
   email: string;
-  phone: string;
+  phone?: string; // Make phone optional
   subject: string;
   message: string;
 }

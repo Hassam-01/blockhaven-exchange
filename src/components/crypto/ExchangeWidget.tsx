@@ -31,8 +31,15 @@ import {
   validateAddress,
   getTransactionStatus,
   getExchangeRange,
+  getFiatEstimate,
+  createFiatTransaction,
+  getFiatCurrencies,
+  getCryptoCurrenciesForFiat,
 } from "@/lib/changenow-api-v2";
-import { getCurrentServiceFee, ServiceFeeConfig } from "@/lib/user-services-api";
+import {
+  getCurrentServiceFee,
+  ServiceFeeConfig,
+} from "@/lib/user-services-api";
 
 // Enhanced interface to handle potential separate rates from backend
 interface EnhancedServiceFeeConfig extends ServiceFeeConfig {
@@ -45,7 +52,7 @@ import { WalletAddressInput } from "./WalletAddressInput";
 import CurrencySelector from "./CurrencySelector";
 import { TermsPopover } from "@/components/legal/TermsPopover";
 import { PrivacyPopover } from "@/components/legal/PrivacyPopover";
-import { CreateTransactionResponse, ExchangeCurrency } from "@/const/types";
+import { CreateTransactionResponse, CryptoCurrencyForFiat, ExchangeCurrency, FiatCurrency } from "@/const/types";
 
 export function ExchangeWidget() {
   const [activeTab, setActiveTab] = useState<"exchange" | "buy" | "sell">(
@@ -80,7 +87,16 @@ export function ExchangeWidget() {
   const [exchangeType, setExchangeType] = useState<"fixed" | "floating">(
     "fixed"
   );
-  const [serviceFeeConfig, setServiceFeeConfig] = useState<EnhancedServiceFeeConfig | null>(null);
+  const [serviceFeeConfig, setServiceFeeConfig] =
+    useState<EnhancedServiceFeeConfig | null>(null);
+  
+  // Fiat-specific state variables
+  const [fiatCurrencies, setFiatCurrencies] = useState<FiatCurrency[]>([]);
+  const [cryptoForFiat, setCryptoForFiat] = useState<CryptoCurrencyForFiat[]>([]);
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [selectedFiatCurrency, setSelectedFiatCurrency] = useState("USD");
+  
   const { toast } = useToast();
 
   // Memoize filtered currencies for better performance
@@ -95,47 +111,30 @@ export function ExchangeWidget() {
   }, [allCurrencies]);
 
   // Exchange type charges - dynamically generated from backend data
-  const exchangeCharges = useMemo(
-    () => {
-      const fixedRate = serviceFeeConfig?.fixedRateFee
-      
-      const floatingRate = serviceFeeConfig?.floatingRateFee
-      
-      console.log("Exchange charges calculated:", { 
-        fixedRate, 
-        floatingRate, 
-        serviceFeeConfig,
-        hasFixedRateFee: !!serviceFeeConfig?.fixedRateFee,
-        hasFloatingRateFee: !!serviceFeeConfig?.floatingRateFee,
-        hasPercentage: !!serviceFeeConfig?.percentage
-      });
-      
-      return {
-        fixed: {
-          rate: fixedRate,
-          description: "Fixed rate - guaranteed for 15 minutes",
-        },
-        floating: { 
-          rate: floatingRate,
-          description: "Floating rate - best market price" 
-        },
-      };
-    },
-    [serviceFeeConfig]
-  );
+  const exchangeCharges = useMemo(() => {
+    const fixedRate = serviceFeeConfig?.fixedRateFee;
+
+    const floatingRate = serviceFeeConfig?.floatingRateFee;
+    return {
+      fixed: {
+        rate: fixedRate,
+        description: "Fixed rate - guaranteed for 15 minutes",
+      },
+      floating: {
+        rate: floatingRate,
+        description: "Floating rate - best market price",
+      },
+    };
+  }, [serviceFeeConfig]);
 
   // Fetch service fee configuration on component mount
   useEffect(() => {
     const fetchServiceFeeConfig = async () => {
       try {
         const config = await getCurrentServiceFee();
-        console.log("Fetched service fee config:", config);
         setServiceFeeConfig(config as EnhancedServiceFeeConfig);
       } catch (error) {
-        console.error("Failed to fetch service fee configuration:", error);
-        console.log("Using default fallback rates for exchange widget");
-        // Don't show toast error for service fees as it's not critical for basic functionality
-        // We'll use default rates as fallback
+        console.log("Error Fetching Exchange Rate! ");
       }
     };
 
@@ -184,6 +183,30 @@ export function ExchangeWidget() {
     fetchCurrencies();
   }, [toast]);
 
+  // Fetch fiat currencies and crypto currencies for fiat
+  useEffect(() => {
+    const fetchFiatData = async () => {
+      try {
+        const [fiatCurrs, cryptoCurrs] = await Promise.all([
+          getFiatCurrencies(),
+          getCryptoCurrenciesForFiat()
+        ]);
+
+        if (fiatCurrs) {
+          setFiatCurrencies(fiatCurrs);
+        }
+
+        if (cryptoCurrs) {
+          setCryptoForFiat(cryptoCurrs);
+        }
+      } catch (error) {
+        console.error("Failed to fetch fiat currencies:", error);
+      }
+    };
+
+    fetchFiatData();
+  }, []);
+
   // Update selected currency when fromCurrency changes
   useEffect(() => {
     const currency = allCurrencies.find((c) => c.ticker === fromCurrency);
@@ -197,6 +220,29 @@ export function ExchangeWidget() {
     setSelectedToCurrency(currency || null);
     setLeftColor(currency?.color || "");
   }, [toCurrency, allCurrencies]);
+
+  // Fiat estimation function
+  const performFiatEstimate = useCallback(async (
+    fiatCurrency: string,
+    cryptoCurrency: string,
+    amount: number,
+    isBuy: boolean
+  ) => {
+    try {
+      const estimate = await getFiatEstimate({
+        from_currency: isBuy ? fiatCurrency : cryptoCurrency,
+        to_currency: isBuy ? cryptoCurrency : fiatCurrency,
+        from_amount: amount,
+        deposit_type: "SEPA_1", // Default deposit type
+        payout_type: isBuy ? "CRYPTO_THROUGH_CN" : "SEPA_1"
+      });
+
+      return estimate;
+    } catch (error) {
+      console.error("Error estimating fiat amount:", error);
+      return null;
+    }
+  }, []);
 
   // Minimum and Maximum amounts
   useEffect(() => {
@@ -245,20 +291,52 @@ export function ExchangeWidget() {
 
       setIsLoading(true);
       try {
-        const result = await getEstimatedExchangeAmount(
-          fromCurrency,
-          toCurrency,
-          {
-            [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
-            flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
-            type: calculationType,
+        // Handle fiat estimation for buy/sell tabs
+        if (activeTab === "buy") {
+          // Buy crypto with fiat
+          const estimate = await performFiatEstimate(
+            selectedFiatCurrency,
+            toCurrency,
+            amount,
+            true
+          );
+          
+          if (estimate) {
+            setToAmount(estimate.to_amount);
+          } else {
+            setToAmount("");
           }
-        );
-
-        if (calculationType === "direct") {
-          setToAmount(result.toAmount?.toString() ?? "");
+        } else if (activeTab === "sell") {
+          // Sell crypto for fiat
+          const estimate = await performFiatEstimate(
+            selectedFiatCurrency,
+            fromCurrency,
+            amount,
+            false
+          );
+          
+          if (estimate) {
+            setToAmount(estimate.to_amount);
+          } else {
+            setToAmount("");
+          }
         } else {
-          setFromAmount(result.fromAmount?.toString() ?? "");
+          // Regular crypto-to-crypto exchange
+          const result = await getEstimatedExchangeAmount(
+            fromCurrency,
+            toCurrency,
+            {
+              [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
+              flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
+              type: calculationType,
+            }
+          );
+
+          if (calculationType === "direct") {
+            setToAmount(result.toAmount?.toString() ?? "");
+          } else {
+            setFromAmount(result.fromAmount?.toString() ?? "");
+          }
         }
       } catch (err) {
         console.error("Error estimating amount:", err);
@@ -284,6 +362,9 @@ export function ExchangeWidget() {
     toAmount,
     calculationType,
     exchangeType,
+    activeTab,
+    selectedFiatCurrency,
+    performFiatEstimate,
     toast,
   ]);
 
@@ -444,17 +525,95 @@ export function ExchangeWidget() {
       } finally {
         setIsCreatingTransaction(false);
       }
-    } else {
-      // For buy/sell, show placeholder message
-      const actionMap = {
-        buy: "Buy Order Created",
-        sell: "Sell Order Created",
-      };
+    } else if (type === "buy" || type === "sell") {
+      // Validate customer information for fiat transactions
+      if (!customerEmail.trim()) {
+        toast({
+          title: "Missing Email",
+          description: "Please provide your email address for fiat transactions.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      toast({
-        title: actionMap[type],
-        description: "This feature will be available soon.",
-      });
+      // Validate wallet address for crypto payout (buy) or crypto input (sell)
+      const cryptoAddress = type === "buy" ? depositAddress : depositAddress;
+      const cryptoCurrency = type === "buy" ? toCurrency : fromCurrency;
+      
+      if (!cryptoAddress.trim()) {
+        toast({
+          title: "Missing Wallet Address",
+          description: `Please provide your ${cryptoCurrency.toUpperCase()} wallet address.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate the crypto wallet address
+      try {
+        const addressValidation = await validateAddress(cryptoCurrency, cryptoAddress);
+        if (!addressValidation?.result) {
+          toast({
+            title: "Invalid Wallet Address",
+            description: `Please enter a valid ${cryptoCurrency.toUpperCase()} wallet address.`,
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (error) {
+        toast({
+          title: "Validation Error",
+          description: "Unable to validate wallet address. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create fiat transaction
+      setIsCreatingTransaction(true);
+      try {
+        const fiatTransaction = await createFiatTransaction({
+          from_amount: parseFloat(fromAmount),
+          from_currency: type === "buy" ? selectedFiatCurrency : fromCurrency,
+          to_currency: type === "buy" ? toCurrency : selectedFiatCurrency,
+          from_network: type === "buy" ? null : selectedFromCurrency?.network || null,
+          to_network: type === "buy" ? selectedToCurrency?.network || toCurrency : null,
+          payout_address: cryptoAddress,
+          deposit_type: "SEPA_1", // Default deposit type
+          payout_type: type === "buy" ? "CRYPTO_THROUGH_CN" : "SEPA_1",
+          external_partner_link_id: "",
+          customer: {
+            contact_info: {
+              email: customerEmail,
+              phone_number: customerPhone.trim() || undefined,
+            },
+          },
+        });
+
+        if (fiatTransaction) {
+          // For fiat transactions, we can show the redirect URL or transaction details
+          toast({
+            title: `${type === "buy" ? "Buy" : "Sell"} Order Created`,
+            description: `Your ${type} transaction has been created successfully. Transaction ID: ${fiatTransaction.id}`,
+          });
+
+          // If there's a redirect URL, you might want to open it
+          if (fiatTransaction.redirect_url) {
+            window.open(fiatTransaction.redirect_url, '_blank');
+          }
+        } else {
+          throw new Error("Failed to create fiat transaction");
+        }
+      } catch (error) {
+        console.error("Fiat transaction creation error:", error);
+        toast({
+          title: `${type === "buy" ? "Buy" : "Sell"} Transaction Failed`,
+          description: `Failed to create ${type} transaction. Please try again.`,
+          variant: "destructive",
+        });
+      } finally {
+        setIsCreatingTransaction(false);
+      }
     }
   };
 
@@ -709,7 +868,7 @@ export function ExchangeWidget() {
           <TabsContent value="buy" className="space-y-4 mt-4 flex-1">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                Spend (USD) <span className="text-red-500">*</span>
+                Spend ({selectedFiatCurrency}) <span className="text-red-500">*</span>
               </label>
               <Input
                 type="number"
@@ -741,15 +900,58 @@ export function ExchangeWidget() {
                 />
               </div>
             </div>
+            
+            {/* Customer Information */}
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="text-sm font-medium text-foreground">Customer Information</h4>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Phone Number (Optional)
+                </label>
+                <Input
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+              
+              {/* Crypto Wallet Address */}
+              <WalletAddressInput
+                label={`${selectedToCurrency?.ticker.toUpperCase() || "Crypto"} Wallet Address`}
+                placeholder={`Your ${selectedToCurrency?.ticker.toUpperCase() || "crypto"} wallet address`}
+                value={depositAddress}
+                onChange={setDepositAddress}
+                onCopy={() => handleCopyAddress(depositAddress)}
+                icon="wallet"
+                required
+              />
+            </div>
+            
             <Button
               variant="crypto"
               size="lg"
               className="w-full"
               onClick={() => handleTransaction("buy")}
-              disabled={!fromAmount || isLoading}
+              disabled={!fromAmount || !customerEmail || !depositAddress || isLoading || isCreatingTransaction}
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Buy Crypto
+              {isCreatingTransaction ? "Creating Buy Order..." : "Buy Crypto"}
             </Button>
           </TabsContent>
 
@@ -778,7 +980,7 @@ export function ExchangeWidget() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                Receive (USD) <span className="text-red-500">*</span>
+                Receive ({selectedFiatCurrency}) <span className="text-red-500">*</span>
               </label>
               <Input
                 type="text"
@@ -788,15 +990,58 @@ export function ExchangeWidget() {
                 className="focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
+            
+            {/* Customer Information */}
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="text-sm font-medium text-foreground">Customer Information</h4>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Phone Number (Optional)
+                </label>
+                <Input
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+              
+              {/* Crypto Wallet Address for sending from */}
+              <WalletAddressInput
+                label={`${selectedFromCurrency?.ticker.toUpperCase() || "Crypto"} Wallet Address`}
+                placeholder={`Your ${selectedFromCurrency?.ticker.toUpperCase() || "crypto"} wallet address to send from`}
+                value={depositAddress}
+                onChange={setDepositAddress}
+                onCopy={() => handleCopyAddress(depositAddress)}
+                icon="wallet"
+                required
+              />
+            </div>
+            
             <Button
               variant="crypto"
               size="lg"
               className="w-full"
               onClick={() => handleTransaction("sell")}
-              disabled={!fromAmount || isLoading}
+              disabled={!fromAmount || !customerEmail || !depositAddress || isLoading || isCreatingTransaction}
             >
               <DollarSign className="w-4 h-4 mr-2" />
-              Sell Crypto
+              {isCreatingTransaction ? "Creating Sell Order..." : "Sell Crypto"}
             </Button>
           </TabsContent>
         </Tabs>

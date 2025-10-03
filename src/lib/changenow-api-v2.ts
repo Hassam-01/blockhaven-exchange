@@ -17,7 +17,7 @@ export interface ExchangeCurrency {
   logo?: string;
 }
 
-import { AvailablePairsResponse, CreateTransactionResponse, EstimatedAmountResponse, ExchangeRange, MinAmountResponse, NetworkFeeEstimate, TransactionStatusResponse, UserAddressesResponse, ValidationResponse } from "@/const/types";
+import { AvailablePairsResponse, ContinueExchangeRequest, ContinueExchangeResponse, CreateTransactionResponse, CryptoCurrencyForFiat, EstimatedAmountResponse, ExchangeActionsResponse, ExchangeRange, FiatCurrency, FiatEstimateRequest, FiatEstimateResponse, FiatHealthCheckResponse, FiatMarketInfoResponse, FiatTransactionRequest, FiatTransactionResponse, FiatTransactionStatusResponse, MinAmountResponse, NetworkFeeEstimate, RefundExchangeRequest, RefundExchangeResponse, TransactionStatusResponse, UserAddressesResponse, ValidationResponse } from "@/const/types";
 import { toast } from "@/hooks/use-toast";
 
 const CHANGENOW_API_BASE = 'https://api.changenow.io/v2';
@@ -463,6 +463,363 @@ export async function getExchangeRange(
         return await response.json();
     } catch (error) {
         console.error('Error fetching exchange range:', error);
+        return null;
+    }
+}
+
+/**
+ * Create a fiat-to-cryptocurrency exchange transaction.
+ */
+export async function createFiatTransaction(
+    request: FiatTransactionRequest
+): Promise<FiatTransactionResponse | null> {
+    try {
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/fiat-transaction`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-changenow-api-key': CHANGENOW_API_KEY,
+                },
+                body: JSON.stringify(request),
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to create fiat transaction:', errorData);
+            throw new Error('Failed to create fiat transaction');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating fiat transaction:', error);
+        toast({
+            variant: "destructive",
+            title: "Transaction Error",
+            description: "Failed to create fiat transaction. Please try again."
+        });
+        return null;
+    }
+}
+
+/**
+ * Get the status of a fiat transaction by its ID.
+ */
+export async function getFiatTransactionStatus(
+    transactionId: string
+): Promise<FiatTransactionStatusResponse | null> {
+    try {
+        const params = new URLSearchParams({ id: transactionId });
+
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/fiat-status?${params.toString()}`,
+            {
+                headers: {
+                    'x-api-key': CHANGENOW_API_KEY,
+                },
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to fetch fiat transaction status:', errorData);
+            throw new Error('Failed to fetch fiat transaction status');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching fiat transaction status:', error);
+        return null;
+    }
+}
+
+/**
+ * Get an estimate for a fiat exchange transaction.
+ */
+export async function getFiatEstimate(
+    request: FiatEstimateRequest
+): Promise<FiatEstimateResponse | null> {
+    try {
+        const params = new URLSearchParams();
+        
+        // Add required parameters
+        params.append('from_currency', request.from_currency);
+        params.append('from_amount', request.from_amount.toString());
+        params.append('to_currency', request.to_currency);
+        
+        // Add optional parameters
+        if (request.from_network) params.append('from_network', request.from_network);
+        if (request.to_network) params.append('to_network', request.to_network);
+        if (request.deposit_type) params.append('deposit_type', request.deposit_type);
+        if (request.payout_type) params.append('payout_type', request.payout_type);
+        console.log("test: ", params.toString())
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/fiat-estimate?${params.toString()}`,
+            {
+                headers: {
+                    'x-api-key': CHANGENOW_API_KEY,
+                },
+            }
+        );
+        console.log("response: ", response)
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to fetch fiat estimate:', errorData);
+            throw new Error('Failed to fetch fiat estimate');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching fiat estimate:', error);
+        return null;
+    }
+}
+
+/**
+ * Get market information including min and max range for fiat transactions.
+ */
+export async function getFiatMarketInfo(
+    fromCurrency: string,
+    toCurrency: string,
+    options?: {
+        fromNetwork?: string;
+        toNetwork?: string;
+    }
+): Promise<FiatMarketInfoResponse | null> {
+    try {
+        const fromCurrencyWithNetwork = options?.fromNetwork 
+            ? `${fromCurrency}_${options.fromNetwork}`
+            : fromCurrency;
+        const toCurrencyWithNetwork = options?.toNetwork
+            ? `${toCurrency}_${options.toNetwork}`
+            : toCurrency;
+        
+        const pair = `${fromCurrencyWithNetwork}-${toCurrencyWithNetwork}`;
+
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/fiat-market-info/min-max-range/${pair}`,
+            {
+                headers: {
+                    'x-changenow-api-key': CHANGENOW_API_KEY,
+                },
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to fetch fiat market info:', errorData);
+            throw new Error('Failed to fetch fiat market info');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching fiat market info:', error);
+        return null;
+    }
+}
+
+/**
+ * Check the health status of the fiat-to-cryptocurrency exchange service.
+ */
+export async function getFiatHealthCheck(): Promise<FiatHealthCheckResponse | null> {
+    try {
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/fiat-status`,
+            {
+                headers: {
+                    'x-changenow-api-key': CHANGENOW_API_KEY,
+                },
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to fetch fiat health check:', errorData);
+            throw new Error('Failed to fetch fiat health check');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching fiat health check:', error);
+        return null;
+    }
+}
+
+/**
+ * Get information about fiat currencies that can be used to buy cryptocurrencies.
+ */
+export async function getFiatCurrencies(): Promise<FiatCurrency[] | null> {
+    try {
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/fiat-currencies/fiat`,
+            {
+                // headers: {
+                //     'x-changenow-api-key': CHANGENOW_API_KEY,
+                // },
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to fetch fiat currencies:', errorData);
+            throw new Error('Failed to fetch fiat currencies');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching fiat currencies:', error);
+        return null;
+    }
+}
+
+/**
+ * Get information about cryptocurrencies that can be bought using fiat currencies.
+ */
+export async function getCryptoCurrenciesForFiat(): Promise<CryptoCurrencyForFiat[] | null> {
+    try {
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/fiat-currencies/crypto`,
+            {
+                // headers: {
+                //     'x-changenow-api-key': CHANGENOW_API_KEY,
+                // },
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to fetch crypto currencies for fiat:', errorData);
+            throw new Error('Failed to fetch crypto currencies for fiat');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching crypto currencies for fiat:', error);
+        return null;
+    }
+}
+
+/**
+ * Get possible actions that can be applied to an exchange transaction.
+ * Note: Access to this endpoint requires a dedicated request to partners@changenow.io
+ */
+export async function getExchangeActions(
+    transactionId: string
+): Promise<ExchangeActionsResponse | null> {
+    try {
+        const params = new URLSearchParams({ id: transactionId });
+
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/exchange/actions?${params.toString()}`,
+            {
+                headers: {
+                    'x-changenow-api-key': CHANGENOW_API_KEY,
+                },
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                console.error('Unauthorized: Please contact partners@changenow.io for access to this endpoint');
+            }
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to fetch exchange actions:', errorData);
+            throw new Error('Failed to fetch exchange actions');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching exchange actions:', error);
+        return null;
+    }
+}
+
+/**
+ * Refund an exchange to the refund or original address.
+ * Note: Access to this endpoint requires a dedicated request to partners@changenow.io
+ */
+export async function refundExchange(
+    request: RefundExchangeRequest
+): Promise<RefundExchangeResponse | null> {
+    try {
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/exchange/refund`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-changenow-api-key': CHANGENOW_API_KEY,
+                },
+                body: JSON.stringify({
+                    id: request.id,
+                    address: request.address,
+                    ...(request.extraId && { extraId: request.extraId })
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                console.error('Unauthorized: Please contact partners@changenow.io for access to this endpoint');
+            }
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to refund exchange:', errorData);
+            throw new Error('Failed to refund exchange');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error refunding exchange:', error);
+        toast({
+            variant: "destructive",
+            title: "Refund Error",
+            description: "Failed to process refund request. Please try again."
+        });
+        return null;
+    }
+}
+
+/**
+ * Continue an exchange that can be pushed.
+ * Note: Access to this endpoint requires a dedicated request to partners@changenow.io
+ */
+export async function continueExchange(
+    request: ContinueExchangeRequest
+): Promise<ContinueExchangeResponse | null> {
+    try {
+        const response = await fetch(
+            `${CHANGENOW_API_BASE}/exchange/continue`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-changenow-api-key': CHANGENOW_API_KEY,
+                },
+                body: JSON.stringify({
+                    id: request.id
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                console.error('Unauthorized: Please contact partners@changenow.io for access to this endpoint');
+            }
+            const errorData = await response.json().catch(() => null);
+            console.error('Failed to continue exchange:', errorData);
+            throw new Error('Failed to continue exchange');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error continuing exchange:', error);
+        toast({
+            variant: "destructive",
+            title: "Continue Exchange Error",
+            description: "Failed to continue exchange. Please try again."
+        });
         return null;
     }
 }

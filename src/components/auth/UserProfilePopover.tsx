@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, LogOut, Settings, CreditCard, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { logoutUser } from '@/lib/user-services-api';
 import type { User as UserType } from '@/lib/user-services-api';
 
 interface UserProfilePopoverProps {
@@ -14,8 +15,7 @@ export function UserProfilePopover({ user, onLogout, onDashboard }: UserProfileP
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
+    logoutUser();
     onLogout();
     setIsOpen(false);
   };

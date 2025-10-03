@@ -60,6 +60,24 @@ export interface BulkTestimonialRequest {
 // Utility function to get auth headers
 const getAuthHeaders = (token: string) => getHeaders(token);
 
+// Function to handle token expiration and logout
+const handleTokenExpiration = () => {
+  // Remove token and user data from localStorage
+  localStorage.removeItem("auth_token");
+  localStorage.removeItem("user_data");
+  
+  // Trigger auth state change event to update UI
+  window.dispatchEvent(new CustomEvent("auth-state-changed"));
+  
+  // Optionally show a notification to the user
+  console.warn("Session expired. Please log in again.");
+};
+
+// Utility function to manually logout a user (can be used by components)
+export const logoutUser = () => {
+  handleTokenExpiration();
+};
+
 // Generic API call function
 const apiCall = async <T>(
   endpoint: string,
@@ -74,6 +92,20 @@ const apiCall = async <T>(
   });
 
   if (!response.ok) {
+    // Check if the error is due to token expiration (401 Unauthorized)
+    if (response.status === 401) {
+      // Check if this request was using authentication
+      const authHeader = options.headers && 
+        (options.headers as Record<string, string>)['Authorization'];
+      
+      if (authHeader) {
+        // This was an authenticated request that failed with 401
+        // Handle token expiration
+        handleTokenExpiration();
+        throw new Error("Session expired. Please log in again.");
+      }
+    }
+
     const errorData = await response.json().catch(() => ({}));
     console.error('API Error:', {
       status: response.status,
