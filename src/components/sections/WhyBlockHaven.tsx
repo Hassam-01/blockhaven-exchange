@@ -31,7 +31,13 @@ const features = [
 
 export function WhyBlockHaven() {
   return (
-    <section id="why-blockhaven" className="py-20 bg-muted/30  relative overflow-hidden">
+    <section id="why-blockhaven" className="py-20 bg-muted/30 relative overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
+        style={{ backgroundImage: `url("https://i.ibb.co/hxZQjtHJ/bg.jpg")` }}
+      />
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">
@@ -75,7 +81,7 @@ export function WhyBlockHaven() {
           </div>
           <div className="text-center">
             <div className="text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-              300+
+              900+
             </div>
             <p className="text-muted-foreground">Cryptocurrencies</p>
           </div>

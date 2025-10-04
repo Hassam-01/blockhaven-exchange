@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight, User as UserIcon, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SignInPopover } from "@/components/auth/SignInPopover";
 import { UserProfilePopover } from "@/components/auth/UserProfilePopover";
-import { getCurrentUser, getCurrentAuthToken, validateCurrentToken } from "@/lib/user-services-api";
+import { Profile } from "@/components/Profile";
+import { getCurrentUser, getCurrentAuthToken, validateCurrentToken, logoutUser } from "@/lib/user-services-api";
 import type { User } from "@/lib/user-services-api";
 
 interface HeaderProps {
@@ -15,6 +16,7 @@ export function Header({ onDashboardOpen }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const tokenValidationInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Check for existing user session on component mount
@@ -98,6 +100,24 @@ export function Header({ onDashboardOpen }: HeaderProps) {
 
   const handleLogout = () => {
     setUser(null);
+  };
+
+  const handleMobileProfile = () => {
+    setIsProfileOpen(true);
+    setIsMenuOpen(false);
+  };
+
+  const handleMobileLogout = () => {
+    logoutUser();
+    setUser(null);
+    setIsMenuOpen(false);
+  };
+
+  const handleMobileDashboard = () => {
+    if (onDashboardOpen) {
+      onDashboardOpen();
+    }
+    setIsMenuOpen(false);
   };
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -188,30 +208,79 @@ export function Header({ onDashboardOpen }: HeaderProps) {
                   {item.name}
                 </button>
               ))}
-              <div className="px-3 py-2 space-y-2">
-                {!isLoading &&
-                  (user ? (
-                    <UserProfilePopover 
-                      user={user} 
-                      onLogout={handleLogout}
-                      onDashboard={onDashboardOpen}
-                    />
-                  ) : (
-                    <SignInPopover>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        Sign In
-                      </Button>
-                    </SignInPopover>
-                  ))}
-              </div>
+              
+              {/* Mobile User Section */}
+              {!isLoading && user && (
+                <div className="border-t border-border pt-2 mt-2">
+                  {/* User Info Display */}
+                  <div className="flex items-center gap-3 px-3 py-2 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white text-sm font-medium">
+                      {user.first_name.charAt(0)}{user.last_name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {user.first_name} {user.last_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Admin Dashboard Option */}
+                  {user.user_type === 'admin' && (
+                    <button
+                      onClick={handleMobileDashboard}
+                      className="flex items-center gap-3 w-full text-left px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-md transition-colors duration-200 font-medium"
+                    >
+                      <Shield className="h-4 w-4" />
+                      Admin Dashboard
+                    </button>
+                  )}
+
+                  {/* Profile Option */}
+                  <button
+                    onClick={handleMobileProfile}
+                    className="flex items-center gap-3 w-full text-left px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-md transition-colors duration-200 font-medium"
+                  >
+                    <UserIcon className="h-4 w-4" />
+                    Profile
+                  </button>
+
+                  {/* Sign Out Option */}
+                  <button
+                    onClick={handleMobileLogout}
+                    className="flex items-center gap-3 w-full text-left px-3 py-2 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors duration-200 font-medium"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
+
+              {/* Sign In Section for non-authenticated users */}
+              {!isLoading && !user && (
+                <div className="px-3 py-2 space-y-2">
+                  <SignInPopover>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                    >
+                      Sign In
+                    </Button>
+                  </SignInPopover>
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
+
+      {/* Profile Modal */}
+      {isProfileOpen && (
+        <Profile onClose={() => setIsProfileOpen(false)} />
+      )}
     </header>
   );
 }

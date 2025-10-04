@@ -62,13 +62,16 @@ export function Contact() {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Have questions or need support? Our team is here to help you succeed in your crypto journey.
           </p>
-          <div className="flex items-center justify-center gap-2 text-lg">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 text-lg">
+            <span>
+
             <Mail className="w-5 h-5 text-primary" />
             <span className="text-muted-foreground">Contact us directly at:</span>
+            </span>
             <a 
               href="mailto:support@blockhaven.com" 
               className="text-primary hover:text-primary/80 transition-colors font-medium"
-            >
+              >
               support@blockhaven.com
             </a>
           </div>

@@ -1,12 +1,20 @@
 import React from "react";
 import { Github, Twitter, Linkedin, Mail, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PrivacyPopover } from "@/components/legal/PrivacyPopover";
+import { TermsPopover } from "@/components/legal/TermsPopover";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="relative border-t border-primary/20">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
+        style={{ backgroundImage: `url("https://i.ibb.co/hxZQjtHJ/bg.jpg")` }}
+      />
+      
       {/* Cloud-like shapes */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute bottom-0 left-0 w-32 h-16 bg-white/5 rounded-full blur-xl"></div>
@@ -50,29 +58,16 @@ export function Footer() {
             <ul className="space-y-3 text-muted-foreground">
               <li>
                 <a href="#" className="hover:text-foreground transition-colors">
-                  Instant Exchange
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
                   Fixed-Rate Exchange
                 </a>
               </li>
+              
               <li>
                 <a href="#" className="hover:text-foreground transition-colors">
-                  API Integration
+                  Floating-Rate Exchange
                 </a>
               </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  White Label Solution
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Mobile App
-                </a>
-              </li>
+              
             </ul>
           </div>
 
@@ -82,27 +77,7 @@ export function Footer() {
             <ul className="space-y-3 text-muted-foreground">
               <li>
                 <a href="#" className="hover:text-foreground transition-colors">
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
                   Contact Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  API Documentation
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  System Status
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Bug Bounty
                 </a>
               </li>
             </ul>
@@ -113,29 +88,18 @@ export function Footer() {
             <h4 className="font-bold text-lg mb-4 text-foreground">Company</h4>
             <ul className="space-y-3 text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  About Us
-                </a>
+                <PrivacyPopover>
+                  <button className="hover:text-foreground transition-colors text-left">
+                    Privacy Policy
+                  </button>
+                </PrivacyPopover>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Security
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Careers
-                </a>
+                <TermsPopover>
+                  <button className="hover:text-foreground transition-colors text-left">
+                    Terms of Service
+                  </button>
+                </TermsPopover>
               </li>
             </ul>
           </div>
@@ -165,9 +129,20 @@ export function Footer() {
 
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-border text-center text-muted-foreground">
-          <p>
+          <p className="mb-2">
             © {currentYear} BlockHaven. All rights reserved. | Cryptocurrency
             exchange platform built with security and trust in mind.
+          </p>
+          <p className="text-sm">
+            Developed by{" "}
+            <a 
+              href="https://sifarteq.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              SifarTeq
+            </a>
           </p>
         </div>
       </div>
