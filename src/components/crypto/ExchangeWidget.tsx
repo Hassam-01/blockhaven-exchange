@@ -40,6 +40,16 @@ import {
   getCurrentServiceFee,
   ServiceFeeConfig,
 } from "@/lib/user-services-api";
+import {
+  storeFixedRateData,
+  getFixedRateData,
+  clearFixedRateData,
+  isRateDataValid,
+  getTimeRemaining,
+  formatTimeRemaining,
+  isRateAboutToExpire,
+  isRateCriticallyLow,
+} from "@/lib/rate-utils";
 
 // Enhanced interface to handle potential separate rates from backend
 interface EnhancedServiceFeeConfig extends ServiceFeeConfig {
@@ -56,7 +66,7 @@ import { PrivacyPopover } from "@/components/legal/PrivacyPopover";
 import { CreateTransactionResponse, CryptoCurrencyForFiat, ExchangeCurrency, FiatCurrency } from "@/const/types";
 
 export function ExchangeWidget() {
-  const [activeTab, setActiveTab] = useState<"exchange" | "buy" | "sell">(
+  const [activeTab, setActiveTab] = useState<"exchange">(
     "exchange"
   );
   const [fromCurrency, setFromCurrency] = useState("btc");
@@ -88,6 +98,11 @@ export function ExchangeWidget() {
   const [exchangeType, setExchangeType] = useState<"fixed" | "floating">(
     "fixed"
   );
+  // Rate ID and validity for fixed-rate exchanges - used to freeze the estimated rate
+  const [rateId, setRateId] = useState<string | null>(null);
+  const [validUntil, setValidUntil] = useState<string | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
+  const [showRateTimer, setShowRateTimer] = useState(false);
   const [serviceFeeConfig, setServiceFeeConfig] =
     useState<EnhancedServiceFeeConfig | null>(null);
   
@@ -145,6 +160,51 @@ export function ExchangeWidget() {
 
     fetchServiceFeeConfig();
   }, []);
+
+  // Clear rateId when exchange type or currencies change
+  useEffect(() => {
+    setRateId(null);
+    setValidUntil(null);
+    setShowRateTimer(false);
+    clearFixedRateData();
+  }, [exchangeType, fromCurrency, toCurrency]);
+
+  // Countdown timer for fixed-rate validity
+  useEffect(() => {
+    if (!validUntil || !showRateTimer) {
+      setTimeRemaining("");
+      return;
+    }
+
+    const updateTimer = () => {
+      const timeData = getTimeRemaining(validUntil);
+      
+      if (timeData.isExpired) {
+        setTimeRemaining("Rate expired");
+        setShowRateTimer(false);
+        setRateId(null);
+        setValidUntil(null);
+        clearFixedRateData();
+        
+        toast({
+          title: "Rate Expired",
+          description: "The fixed rate has expired. Please get a new estimate.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setTimeRemaining(timeData.formatted);
+    };
+
+    // Update immediately
+    updateTimer();
+    
+    // Set up interval to update every second
+    const interval = setInterval(updateTimer, 1000);
+    
+    return () => clearInterval(interval);
+  }, [validUntil, showRateTimer, toast]);
 
   // Fetch all currencies on component mount
   useEffect(() => {
@@ -226,6 +286,19 @@ export function ExchangeWidget() {
     setLeftColor(currency?.color || "");
   }, [toCurrency, allCurrencies]);
 
+  // Check for stored fixed rate data on component mount and when currencies change
+  useEffect(() => {
+    if (exchangeType === "fixed" && fromAmount && toAmount) {
+      const storedData = getFixedRateData();
+      
+      if (storedData && isRateDataValid(fromCurrency, toCurrency, fromAmount, toAmount)) {
+        setRateId(storedData.rateId);
+        setValidUntil(storedData.validUntil);
+        setShowRateTimer(true);
+      }
+    }
+  }, [exchangeType, fromCurrency, toCurrency, fromAmount, toAmount]);
+
   // Fiat estimation function
   const performFiatEstimate = useCallback(async (
     fiatCurrency: string,
@@ -296,53 +369,46 @@ export function ExchangeWidget() {
 
       setIsLoading(true);
       try {
-        // Handle fiat estimation for buy/sell tabs
-        if (activeTab === "buy") {
-          // Buy crypto with fiat
-          const estimate = await performFiatEstimate(
-            selectedFiatCurrency,
-            toCurrency,
-            amount,
-            true
-          );
-          
-          if (estimate) {
-            setToAmount(estimate.to_amount);
-          } else {
-            setToAmount("");
+        // Regular crypto-to-crypto exchange
+        const result = await getEstimatedExchangeAmount(
+          fromCurrency,
+          toCurrency,
+          {
+            [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
+            flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
+            type: calculationType,
           }
-        } else if (activeTab === "sell") {
-          // Sell crypto for fiat
-          const estimate = await performFiatEstimate(
-            selectedFiatCurrency,
-            fromCurrency,
-            amount,
-            false
           );
-          
-          if (estimate) {
-            setToAmount(estimate.to_amount);
-          } else {
-            setToAmount("");
-          }
-        } else {
-          // Regular crypto-to-crypto exchange
-          const result = await getEstimatedExchangeAmount(
-            fromCurrency,
-            toCurrency,
-            {
-              [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
-              flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
-              type: calculationType,
+
+          // Store rateId and validUntil for fixed-rate exchanges
+          if (exchangeType === "fixed" && result.rateId) {
+            setRateId(result.rateId);
+            setValidUntil(result.validUntil || null);
+            setShowRateTimer(true);
+            
+            // Store in localStorage
+            if (result.validUntil) {
+              storeFixedRateData({
+                rateId: result.rateId,
+                validUntil: result.validUntil,
+                fromCurrency,
+                toCurrency,
+                fromAmount: calculationType === "direct" ? amount.toString() : result.fromAmount?.toString() || "",
+                toAmount: calculationType === "reverse" ? amount.toString() : result.toAmount?.toString() || "",
+              });
             }
-          );
+          } else {
+            setRateId(null);
+            setValidUntil(null);
+            setShowRateTimer(false);
+            clearFixedRateData();
+          }
 
           if (calculationType === "direct") {
             setToAmount(result.toAmount?.toString() ?? "");
           } else {
             setFromAmount(result.fromAmount?.toString() ?? "");
           }
-        }
       } catch (err) {
         console.error("Error estimating amount:", err);
         toast({
@@ -494,6 +560,69 @@ export function ExchangeWidget() {
       const isValid = await validateWalletAddresses();
       if (!isValid) return;
 
+      // Check if fixed rate has expired and get a new rate if needed
+      let currentRateId = rateId;
+      if (exchangeType === "fixed") {
+        if (!validUntil || getTimeRemaining(validUntil).isExpired) {
+          toast({
+            title: "Rate Expired",
+            description: "Getting a new fixed rate...",
+          });
+
+          try {
+            const amount = calculationType === "direct" ? parseFloat(fromAmount) : parseFloat(toAmount);
+            const newRateResult = await getEstimatedExchangeAmount(
+              fromCurrency,
+              toCurrency,
+              {
+                [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
+                flow: "fixed-rate",
+                type: calculationType,
+              }
+            );
+
+            if (newRateResult.rateId && newRateResult.validUntil) {
+              currentRateId = newRateResult.rateId;
+              setRateId(newRateResult.rateId);
+              setValidUntil(newRateResult.validUntil);
+              setShowRateTimer(true);
+
+              // Store the new rate data
+              storeFixedRateData({
+                rateId: newRateResult.rateId,
+                validUntil: newRateResult.validUntil,
+                fromCurrency,
+                toCurrency,
+                fromAmount: calculationType === "direct" ? amount.toString() : newRateResult.fromAmount?.toString() || "",
+                toAmount: calculationType === "reverse" ? amount.toString() : newRateResult.toAmount?.toString() || "",
+              });
+
+              // Update amounts if they changed with the new rate
+              if (calculationType === "direct" && newRateResult.toAmount) {
+                setToAmount(newRateResult.toAmount.toString());
+              } else if (calculationType === "reverse" && newRateResult.fromAmount) {
+                setFromAmount(newRateResult.fromAmount.toString());
+              }
+
+              toast({
+                title: "New Rate Obtained",
+                description: "Fixed rate has been refreshed and locked for 15 minutes.",
+              });
+            } else {
+              throw new Error("Failed to get new fixed rate");
+            }
+          } catch (error) {
+            console.error("Error getting new fixed rate:", error);
+            toast({
+              title: "Rate Refresh Failed",
+              description: "Could not get a new fixed rate. Please try again or use floating rate.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      }
+
       // Create the exchange transaction
       setIsCreatingTransaction(true);
       try {
@@ -508,6 +637,8 @@ export function ExchangeWidget() {
           refundAddress: refundAddress.trim() || undefined,
           flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
           type: calculationType,
+          // Include rateId for fixed-rate to freeze the estimated rate
+          ...(exchangeType === "fixed" && currentRateId && { rateId: currentRateId }),
         });
 
         if (transaction) {
@@ -634,10 +765,10 @@ export function ExchangeWidget() {
         {/* Tabs with active background */}
         <Tabs
           value={activeTab}
-          onValueChange={(v) => setActiveTab(v as "exchange" | "buy" | "sell")}
+          onValueChange={(v) => setActiveTab(v as "exchange")}
           className="w-full flex flex-col flex-1"
         >
-          <TabsList className="grid w-full grid-cols-3 relative bg-muted p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-1 relative bg-muted p-1 rounded-lg">
             <TabsTrigger
               value="exchange"
               className="flex items-center gap-2 relative z-10 transition-all duration-200"
@@ -645,32 +776,13 @@ export function ExchangeWidget() {
               <ArrowUpDown className="w-4 h-4" />
               Exchange
             </TabsTrigger>
-            <TabsTrigger
-              value="buy"
-              className="flex items-center gap-2 relative z-10 transition-all duration-200"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Buy
-            </TabsTrigger>
-            <TabsTrigger
-              value="sell"
-              className="flex items-center gap-2 relative z-10 transition-all duration-200"
-            >
-              <DollarSign className="w-4 h-4" />
-              Sell
-            </TabsTrigger>
 
             {/* Active tab background */}
             <div
               className="absolute top-1 bottom-1 bg-background shadow-sm rounded-md transition-all duration-500"
               style={{
-                width: `calc(33.333% - 0.5rem)`,
-                left:
-                  activeTab === "exchange"
-                    ? "0.25rem"
-                    : activeTab === "buy"
-                    ? "calc(33.333% + 0.25rem)"
-                    : "calc(66.666% + 0.25rem)",
+                width: `calc(100% - 0.5rem)`,
+                left: "0.25rem",
               }}
             />
           </TabsList>
@@ -850,6 +962,43 @@ export function ExchangeWidget() {
                   </span>
                 </span>
               </span>
+              
+              {/* Fixed Rate Timer */}
+              {showRateTimer && exchangeType === "fixed" && timeRemaining && (
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${
+                    timeRemaining.includes('expired') 
+                      ? 'bg-red-100 dark:bg-red-900/20' 
+                      : timeRemaining.startsWith('0:') && !timeRemaining.startsWith('0:0')
+                        ? 'bg-orange-100 dark:bg-orange-900/20'
+                        : timeRemaining.startsWith('0:0')
+                          ? 'bg-red-100 dark:bg-red-900/20'
+                          : 'bg-green-100 dark:bg-green-900/20'
+                  }`}>
+                    <Zap className={`h-3 w-3 ${
+                      timeRemaining.includes('expired')
+                        ? 'text-red-600 dark:text-red-400'
+                        : timeRemaining.startsWith('0:') && !timeRemaining.startsWith('0:0')
+                          ? 'text-orange-600 dark:text-orange-400'
+                          : timeRemaining.startsWith('0:0')
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-green-600 dark:text-green-400'
+                    }`} />
+                    <span className={`text-xs font-medium ${
+                      timeRemaining.includes('expired')
+                        ? 'text-red-600 dark:text-red-400'
+                        : timeRemaining.startsWith('0:') && !timeRemaining.startsWith('0:0')
+                          ? 'text-orange-600 dark:text-orange-400'
+                          : timeRemaining.startsWith('0:0')
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-green-600 dark:text-green-400'
+                    }`}>
+                      {timeRemaining.includes('expired') ? 'Rate expired' : `Rate locked: ${timeRemaining}`}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               {/* Exchange Button */}
               <Button
                 variant="crypto"
@@ -862,195 +1011,17 @@ export function ExchangeWidget() {
                   isCreatingTransaction ||
                   !depositAddress.trim()
                 }
-                className="px-8"
+                className={`px-8 ${
+                  exchangeType === "fixed" && validUntil && isRateCriticallyLow(validUntil)
+                    ? "animate-pulse"
+                    : ""
+                }`}
               >
-                {isCreatingTransaction
-                  ? "Creating Exchange..."
-                  : "Exchange now"}
+                Exchange Now
               </Button>
             </div>
           </TabsContent>
 
-          {/* Buy */}
-          <TabsContent value="buy" className="space-y-4 mt-4 flex-1">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                Spend ({selectedFiatCurrency}) <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="number"
-                placeholder="0.00"
-                value={fromAmount}
-                onChange={(e) => setFromAmount(e.target.value)}
-                className="focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                Buy <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
-                <CurrencyInput
-                  value={isLoading ? "Calculating..." : toAmount}
-                  onChange={() => {}} // Read-only
-                  selectedCurrency={selectedToCurrency}
-                  placeholder="0.00"
-                  readOnly
-                  className="flex-1"
-                />
-                <CurrencySelector
-                  value={toCurrency}
-                  onValueChange={handleToCurrencyChange}
-                  currencies={filteredCurrencies}
-                  selectedCurrency={selectedToCurrency}
-                  className="w-48 min-w-[200px]"
-                />
-              </div>
-            </div>
-            
-            {/* Customer Information */}
-            <div className="space-y-4 border-t pt-4">
-              <h4 className="text-sm font-medium text-foreground">Customer Information</h4>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Phone Number (Optional)
-                </label>
-                <Input
-                  type="tel"
-                  placeholder="+1234567890"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
-              
-              {/* Crypto Wallet Address */}
-              <WalletAddressInput
-                label={`${selectedToCurrency?.ticker.toUpperCase() || "Crypto"} Wallet Address`}
-                placeholder={`Your ${selectedToCurrency?.ticker.toUpperCase() || "crypto"} wallet address`}
-                value={depositAddress}
-                onChange={setDepositAddress}
-                onCopy={() => handleCopyAddress(depositAddress)}
-                icon="wallet"
-                required
-              />
-            </div>
-            
-            <Button
-              variant="crypto"
-              size="lg"
-              className="w-full"
-              onClick={() => handleTransaction("buy")}
-              disabled={!fromAmount || !customerEmail || !depositAddress || isLoading || isCreatingTransaction}
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              {isCreatingTransaction ? "Creating Buy Order..." : "Buy Crypto"}
-            </Button>
-          </TabsContent>
-
-          {/* Sell */}
-          <TabsContent value="sell" className="space-y-4 mt-4 flex-1">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                Sell <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
-                <CurrencyInput
-                  value={fromAmount}
-                  onChange={setFromAmount}
-                  selectedCurrency={selectedFromCurrency}
-                  placeholder="0.00"
-                  className="flex-1"
-                />
-                <CurrencySelector
-                  value={fromCurrency}
-                  onValueChange={handleFromCurrencyChange}
-                  currencies={filteredCurrencies}
-                  selectedCurrency={selectedFromCurrency}
-                  className="w-48 min-w-[200px]"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                Receive ({selectedFiatCurrency}) <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="text"
-                placeholder="0.00"
-                value={isLoading ? "Calculating..." : toAmount}
-                readOnly
-                className="focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
-            
-            {/* Customer Information */}
-            <div className="space-y-4 border-t pt-4">
-              <h4 className="text-sm font-medium text-foreground">Customer Information</h4>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Phone Number (Optional)
-                </label>
-                <Input
-                  type="tel"
-                  placeholder="+1234567890"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
-              
-              {/* Crypto Wallet Address for sending from */}
-              <WalletAddressInput
-                label={`${selectedFromCurrency?.ticker.toUpperCase() || "Crypto"} Wallet Address`}
-                placeholder={`Your ${selectedFromCurrency?.ticker.toUpperCase() || "crypto"} wallet address to send from`}
-                value={depositAddress}
-                onChange={setDepositAddress}
-                onCopy={() => handleCopyAddress(depositAddress)}
-                icon="wallet"
-                required
-              />
-            </div>
-            
-            <Button
-              variant="crypto"
-              size="lg"
-              className="w-full"
-              onClick={() => handleTransaction("sell")}
-              disabled={!fromAmount || !customerEmail || !depositAddress || isLoading || isCreatingTransaction}
-            >
-              <DollarSign className="w-4 h-4 mr-2" />
-              {isCreatingTransaction ? "Creating Sell Order..." : "Sell Crypto"}
-            </Button>
-          </TabsContent>
         </Tabs>
 
         <p className="text-xs text-center text-muted-foreground mt-6">

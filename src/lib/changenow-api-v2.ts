@@ -229,6 +229,16 @@ export async function getMinimalExchangeAmount(
 
 /**
  * Get an estimated exchange amount and related details.
+ * For fixed-rate flow, automatically sets useRateId to true to get rateId for freezing the rate.
+ * 
+ * @param fromCurrency - Source currency ticker
+ * @param toCurrency - Target currency ticker  
+ * @param options - Exchange options including flow type, amounts, networks, etc.
+ * @returns Promise<EstimatedAmountResponse> - Contains estimated amounts and rateId for fixed-rate
+ * 
+ * Note: When flow is 'fixed-rate', the response will include:
+ * - rateId: Use this when creating the transaction to freeze the estimated rate
+ * - validUntil: Timestamp until which the rate is guaranteed valid
  */
 export async function getEstimatedExchangeAmount(
     fromCurrency: string,
@@ -244,8 +254,14 @@ export async function getEstimatedExchangeAmount(
         isTopUp?: boolean;
     }
 ): Promise<EstimatedAmountResponse> {
+    // Automatically set useRateId to true for fixed-rate flow to get rateId
+    const modifiedOptions = {
+        ...options,
+        useRateId: options.flow === 'fixed-rate' ? true : options.useRateId
+    };
+
     const params = new URLSearchParams({ fromCurrency, toCurrency });
-    Object.entries(options).forEach(([k, v]) => v !== undefined && params.append(k, String(v)));
+    Object.entries(modifiedOptions).forEach(([k, v]) => v !== undefined && params.append(k, String(v)));
 
     const res = await fetch(
         `${CHANGENOW_API_BASE}/exchange/estimated-amount?${params.toString()}`,

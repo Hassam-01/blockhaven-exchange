@@ -39,6 +39,8 @@ export interface EstimatedAmountResponse {
   fromAmount: number;
   toAmount: number;
   flow: string;
+  rateId?: string; // Available for fixed-rate flow when useRateId is true
+  validUntil?: string; // Timestamp until which the rate is valid (ISO format)
 }
 
 export interface CreateTransactionResponse {

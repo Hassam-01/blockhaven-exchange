@@ -9,7 +9,11 @@ import {
 } from '@/components/ui/popover';
 import { TransactionTracker } from './TransactionTracker';
 
-export function TransactionTrackingPopover() {
+interface TransactionTrackingPopoverProps {
+  isMobile?: boolean;
+}
+
+export function TransactionTrackingPopover({ isMobile = false }: TransactionTrackingPopoverProps) {
   const [transactionId, setTransactionId] = useState('');
   const [showTracker, setShowTracker] = useState(false);
   const [currentTrackingId, setCurrentTrackingId] = useState('');
@@ -37,13 +41,13 @@ export function TransactionTrackingPopover() {
           <Button 
             variant="outline" 
             size="sm"
-            className="flex items-center gap-2"
+            className={`flex items-center gap-2 ${isMobile ? 'w-full justify-start' : ''}`}
           >
             <Search className="h-4 w-4" />
-            <span className="hidden sm:inline">Track Transaction</span>
+            <span className={isMobile ? '' : 'hidden sm:inline'}>Track Transaction</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80" align="end">
+        <PopoverContent className="w-80" align={isMobile ? "center" : "end"}>
           <div className="space-y-4">
             <div className="space-y-2">
               <h4 className="font-medium leading-none">Track Transaction</h4>

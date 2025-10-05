@@ -141,7 +141,7 @@ export function Header({ onDashboardOpen }: HeaderProps) {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto md:px-6 px-2">
         <nav className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center gap-2">
@@ -210,7 +210,7 @@ export function Header({ onDashboardOpen }: HeaderProps) {
               
               {/* Mobile Track Transaction */}
               <div className="px-3 py-2">
-                <TransactionTrackingPopover />
+                <TransactionTrackingPopover isMobile={true} />
               </div>
               
               {/* Mobile User Section */}
