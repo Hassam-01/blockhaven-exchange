@@ -1,5 +1,4 @@
-import React from 'react';
-import { Shield, Zap, Globe, Lock, TrendingUp, Users } from 'lucide-react';
+import { Zap, Globe, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const features = [
@@ -31,13 +30,7 @@ const features = [
 
 export function WhyBlockHaven() {
   return (
-    <section id="why-blockhaven" className="py-20 bg-muted/30 relative overflow-hidden">
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
-        style={{ backgroundImage: `url("https://i.ibb.co/hxZQjtHJ/bg.jpg")` }}
-      />
-      
+    <section id="why-blockhaven" className="py-20 bg-muted/30  relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">

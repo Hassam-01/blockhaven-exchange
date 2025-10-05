@@ -19,6 +19,8 @@ export interface ExchangeCurrency {
 
 import { AvailablePairsResponse, ContinueExchangeRequest, ContinueExchangeResponse, CreateTransactionResponse, CryptoCurrencyForFiat, EstimatedAmountResponse, ExchangeActionsResponse, ExchangeRange, FiatCurrency, FiatEstimateRequest, FiatEstimateResponse, FiatHealthCheckResponse, FiatMarketInfoResponse, FiatTransactionRequest, FiatTransactionResponse, FiatTransactionStatusResponse, MinAmountResponse, NetworkFeeEstimate, RefundExchangeRequest, RefundExchangeResponse, TransactionStatusResponse, UserAddressesResponse, ValidationResponse } from "@/const/types";
 import { toast } from "@/hooks/use-toast";
+import { API_CONFIG, getHeaders } from "@/lib/api-config";
+import { getCurrentAuthToken } from "@/lib/user-services-api";
 
 const CHANGENOW_API_BASE = 'https://api.changenow.io/v2';
 const CHANGENOW_API_KEY = '4d2e85bbf550b94bd9647732dc3b9984ac14b560a1236f8f142fe82f9e8ce583';
@@ -209,7 +211,7 @@ export async function getMinimalExchangeAmount(
         if (options?.fromNetwork) params.append('fromNetwork', options.fromNetwork);
         if (options?.toNetwork) params.append('toNetwork', options.toNetwork);
         if (options?.flow) params.append('flow', options.flow);
-        // console.log("p: ", params)
+
         const response = await fetch(
             `${CHANGENOW_API_BASE}/exchange/min-amount?${params.toString()}`,
             {
@@ -267,8 +269,8 @@ export async function createExchangeTransaction(
     body: {
         fromCurrency: string;
         toCurrency: string;
-        fromNetwork?: string;
-        toNetwork?: string;
+        fromNetwork: string;
+        toNetwork: string;
         fromAmount?: string;
         toAmount?: string;
         address: string;
@@ -285,25 +287,55 @@ export async function createExchangeTransaction(
     userIp?: string
 ): Promise<CreateTransactionResponse | null> {
     try {
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-            'x-changenow-api-key': CHANGENOW_API_KEY,
-        };
+        // Prepare headers for backend request (with or without token)
+        const headers = getHeaders();
+        
+        // Add user IP to the request body if provided
+        const requestBody = userIp ? { ...body, userIp } : body;
 
-        if (userIp) {
-            headers['x-forwarded-for'] = userIp;
-        }
-
-        const response = await fetch(`${CHANGENOW_API_BASE}/exchange`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EXCHANGES.CREATE}`, {
             method: 'POST',
             headers,
-            body: JSON.stringify(body),
+            body: JSON.stringify(requestBody),
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            const errorMessage = errorData?.message || 'Failed to create transaction';
+            
+            toast({
+                variant: "destructive",
+                title: "Transaction Error",
+                description: errorMessage
+            });
+            
+            throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+
+        // Extract the actual transaction data from the response
+        const transactionData = result.data || result;
+        
+        // Show success message
+        toast({
+            title: "Transaction Created",
+            description: "Your exchange transaction has been created successfully."
         });
 
-        if (!response.ok) throw new Error('Failed to create transaction');
-        return await response.json();
+        return transactionData;
     } catch (error) {
         console.error('Error creating exchange transaction:', error);
+        
+        // Only show toast if it hasn't been shown already
+        if (error instanceof Error && !error.message.includes('Failed to create transaction')) {
+            toast({
+                variant: "destructive",
+                title: "Network Error",
+                description: "Unable to connect to the server. Please try again."
+            });
+        }
+        
         return null;
     }
 }
@@ -341,8 +373,7 @@ export async function validateAddress(
 ): Promise<ValidationResponse | null> {
     try {
         const params = new URLSearchParams({ currency, address });
-        // console.log("Print address: ", `${CHANGENOW_API_BASE}/validate/address?${params.toString()}`,
-        // )
+
         const response = await fetch(
             `${CHANGENOW_API_BASE}/validate/address?${params.toString()}`,
         );
@@ -554,7 +585,7 @@ export async function getFiatEstimate(
         if (request.to_network) params.append('to_network', request.to_network);
         if (request.deposit_type) params.append('deposit_type', request.deposit_type);
         if (request.payout_type) params.append('payout_type', request.payout_type);
-        console.log("test: ", params.toString())
+
         const response = await fetch(
             `${CHANGENOW_API_BASE}/fiat-estimate?${params.toString()}`,
             {
@@ -563,7 +594,7 @@ export async function getFiatEstimate(
                 },
             }
         );
-        console.log("response: ", response)
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => null);
             console.error('Failed to fetch fiat estimate:', errorData);

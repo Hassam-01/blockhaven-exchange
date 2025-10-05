@@ -1,20 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, Shield, Zap, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
 import { ExchangeWidget } from '@/components/crypto/ExchangeWidget';
 import mountainBg from '@/assets/mountain-bg.png';
+
+const words = ['Reliable', 'Secure', 'Swift'];
+const wordColors = [
+  'from-blue-500 to-cyan-400',
+  'from-green-500 to-emerald-400', 
+  'from-purple-500 to-pink-400'
+];
 
 export function Hero() {
   const [currentWord, setCurrentWord] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  const words = ['Reliable', 'Secure', 'Swift'];
-  const wordColors = [
-    'from-blue-500 to-cyan-400',
-    'from-green-500 to-emerald-400', 
-    'from-purple-500 to-pink-400'
-  ];
 
   useEffect(() => {
     const current = words[currentWord];

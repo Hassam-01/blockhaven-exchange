@@ -50,6 +50,7 @@ import { CurrencyInput } from "./CurrencyInput";
 import { ExchangeTypeSelector } from "./ExchangeTypeSelector";
 import { WalletAddressInput } from "./WalletAddressInput";
 import CurrencySelector from "./CurrencySelector";
+import { TransactionTracker } from "./TransactionTracker";
 import { TermsPopover } from "@/components/legal/TermsPopover";
 import { PrivacyPopover } from "@/components/legal/PrivacyPopover";
 import { CreateTransactionResponse, CryptoCurrencyForFiat, ExchangeCurrency, FiatCurrency } from "@/const/types";
@@ -96,6 +97,10 @@ export function ExchangeWidget() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [selectedFiatCurrency, setSelectedFiatCurrency] = useState("USD");
+  
+  // Transaction tracking state
+  const [showTransactionTracker, setShowTransactionTracker] = useState(false);
+  const [trackingTransactionId, setTrackingTransactionId] = useState<string>("");
   
   const { toast } = useToast();
 
@@ -495,6 +500,8 @@ export function ExchangeWidget() {
         const transaction = await createExchangeTransaction({
           fromCurrency,
           toCurrency,
+          fromNetwork: selectedFromCurrency?.network || fromCurrency,
+          toNetwork: selectedToCurrency?.network || toCurrency,
           fromAmount: calculationType === "direct" ? fromAmount : undefined,
           toAmount: calculationType === "reverse" ? toAmount : undefined,
           address: depositAddress,
@@ -512,10 +519,10 @@ export function ExchangeWidget() {
               "Your exchange transaction has been created successfully.",
           });
         } else {
-          throw new Error("Failed to create transaction");
+          // throw new Error("Failed to create transaction");
         }
       } catch (error) {
-        console.error("Transaction creation error:", error);
+        console.error("Transaction creation error:",  );
         toast({
           title: "Transaction Failed",
           description:
@@ -1144,11 +1151,11 @@ export function ExchangeWidget() {
                 <Button
                   className="flex-1"
                   onClick={() => {
-                    // In a real app, this would open the transaction tracking page
-                    window.open(
-                      `https://changenow.io/exchange/txs/${currentTransaction.id}`,
-                      "_blank"
-                    );
+                    if (currentTransaction?.id) {
+                      setTrackingTransactionId(currentTransaction.id);
+                      setShowTransactionTracker(true);
+                      setShowTransactionDialog(false);
+                    }
                   }}
                 >
                   Track Transaction
@@ -1158,6 +1165,13 @@ export function ExchangeWidget() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Transaction Tracker */}
+      <TransactionTracker
+        transactionId={trackingTransactionId}
+        isOpen={showTransactionTracker}
+        onClose={() => setShowTransactionTracker(false)}
+      />
     </Card>
   );
 }

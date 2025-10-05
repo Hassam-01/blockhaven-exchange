@@ -40,6 +40,11 @@ export const API_CONFIG = {
       RESET: '/api/service-fees/reset',
       VALIDATE: '/api/service-fees/validate',
     },
+    // Exchange endpoints
+    EXCHANGES: {
+      CREATE: '/api/exchanges',
+      STATUS: '/api/exchanges/status',
+    },
     // Contact endpoint
     CONTACT: '/api/contact',
   },

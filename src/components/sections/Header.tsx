@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Menu, X, ArrowRight, User as UserIcon, LogOut, Shield } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Menu, X, User as UserIcon, LogOut, Shield, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SignInPopover } from "@/components/auth/SignInPopover";
 import { UserProfilePopover } from "@/components/auth/UserProfilePopover";
 import { Profile } from "@/components/Profile";
+import { TransactionTrackingPopover } from "@/components/crypto/TransactionTrackingPopover";
 import { getCurrentUser, getCurrentAuthToken, validateCurrentToken, logoutUser } from "@/lib/user-services-api";
 import type { User } from "@/lib/user-services-api";
 
@@ -142,12 +144,8 @@ export function Header({ onDashboardOpen }: HeaderProps) {
       <div className="container mx-auto px-6">
         <nav className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold">
-              <span className="bg-gradient-primary bg-clip-text text-transparent">
-                BlockHaven
-              </span>
-            </h1>
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <Logo width={200} height={44} />
           </div>
 
           {/* Desktop Navigation */}
@@ -165,6 +163,7 @@ export function Header({ onDashboardOpen }: HeaderProps) {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
+            <TransactionTrackingPopover />
             {!isLoading &&
               (user ? (
                 <UserProfilePopover 
@@ -208,6 +207,11 @@ export function Header({ onDashboardOpen }: HeaderProps) {
                   {item.name}
                 </button>
               ))}
+              
+              {/* Mobile Track Transaction */}
+              <div className="px-3 py-2">
+                <TransactionTrackingPopover />
+              </div>
               
               {/* Mobile User Section */}
               {!isLoading && user && (

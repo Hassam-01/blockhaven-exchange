@@ -1,0 +1,23 @@
+<svg width="32" height="32" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .icon-fill { fill: #000; }
+    @media (prefers-color-scheme: dark) {
+      .icon-fill { fill: #fff; }
+    }
+  </style>
+  
+  <!-- Outer ring -->
+  <circle cx="400" cy="400" r="380" stroke-width="40" stroke="currentColor" fill="none" class="icon-fill" opacity="0.8"/>
+  
+  <!-- Inner ring -->
+  <circle cx="400" cy="400" r="320" stroke-width="25" stroke="currentColor" fill="none" class="icon-fill" opacity="0.6"/>
+  
+  <!-- Central Bitcoin "B" symbol -->
+  <g class="icon-fill">
+    <!-- Vertical line of the B -->
+    <rect x="320" y="250" width="30" height="300" />
+    
+    <!-- Top horizontal section -->
+    <path d="M350,250 L450,250 Q500,250 500,300 Q500,330 480,340 Q500,350 500,380 Q500,430 450,430 L350,430 Z M380,280 L430,280 Q460,280 460,310 Q460,340 430,340 L380,340 Z M380,370 L440,370 Q470,370 470,400 Q470,430 440,430 L380,430 Z" />
+  </g>
+</svg>
