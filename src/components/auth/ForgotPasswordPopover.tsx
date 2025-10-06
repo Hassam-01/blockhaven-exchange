@@ -9,10 +9,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-} from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { forgotPassword } from "@/lib/user-services-api";
 import type { ForgotPasswordRequest } from "@/lib/user-services-api";
@@ -169,11 +165,6 @@ export const ForgotPasswordPopover: React.FC<ForgotPasswordPopoverProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log("ForgotPasswordPopover isOpen changed:", isOpen);
-  }, [isOpen]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -215,7 +206,6 @@ export const ForgotPasswordPopover: React.FC<ForgotPasswordPopoverProps> = ({
   };
 
   const handleClose = () => {
-    console.log("ForgotPasswordPopover handleClose called");
     setEmail("");
     setError("");
     setSuccess("");
@@ -224,7 +214,6 @@ export const ForgotPasswordPopover: React.FC<ForgotPasswordPopoverProps> = ({
   };
 
   const handleBackToLogin = () => {
-    console.log("ForgotPasswordPopover handleBackToLogin called");
     setEmail("");
     setError("");
     setSuccess("");

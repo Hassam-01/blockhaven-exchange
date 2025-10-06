@@ -444,19 +444,16 @@ export function SignInPopover({ children }: SignInPopoverProps) {
   };
 
   const handleForgotPassword = () => {
-    console.log("Forgot password clicked - showing forgot password popover");
     setIsOpen(false);
     setShowForgotPassword(true);
   };
 
   const handleBackToLogin = () => {
-    console.log("Back to login clicked");
     setShowForgotPassword(false);
     setIsOpen(true);
   };
 
   const handleCloseForgotPassword = () => {
-    console.log("Close forgot password clicked");
     setShowForgotPassword(false);
   };
 
@@ -655,7 +652,6 @@ export function SignInPopover({ children }: SignInPopoverProps) {
 
   return (
     <>
-      {console.log("SignInPopover render - showForgotPassword:", showForgotPassword)}
       {isMobile ? mobileDialog : desktopPopover}
       <ForgotPasswordPopover
         isOpen={showForgotPassword}
