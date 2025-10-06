@@ -1,5 +1,6 @@
 import { Zap, Globe, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Wave1, Wave2, Wave3, Wave4, Wave5 } from '@/components/ui/wave-graphics';
 
 const features = [
   {
@@ -30,7 +31,16 @@ const features = [
 
 export function WhyBlockHaven() {
   return (
-    <section id="why-blockhaven" className="py-20 bg-muted/30  relative overflow-hidden">
+    <section id="why-blockhaven" className="py-20 relative overflow-hidden section-bg">
+      {/* Mountain Background - Wave5 at the very bottom */}
+      {/* <Wave5 className="absolute bottom-0 left-0 w-full h-auto opacity-5 z-0 filter grayscale" /> */}
+      
+      {/* Cloud Layers - Non-overlapping light pattern */}
+      <Wave2 className="absolute top-20 right-1/6 w-1/6 h-auto opacity-[0.02] z-1 filter grayscale" />
+      <Wave1 className="absolute bottom-28 left-1/5 w-1/7 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+      <Wave3 className="absolute top-40 left-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale" />
+      <Wave4 className="absolute bottom-12 right-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">
@@ -59,7 +69,7 @@ export function WhyBlockHaven() {
         </div>
 
         {/* Stats Section */}
-        <div className="mt-20 grid grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* <div className="mt-20 grid grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="text-center">
             <div className="text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
               $2.5B+
@@ -84,7 +94,7 @@ export function WhyBlockHaven() {
             </div>
             <p className="text-muted-foreground">Uptime</p>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

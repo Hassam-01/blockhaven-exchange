@@ -55,6 +55,10 @@ All colors MUST be HSL.
     --shadow-card: 0 10px 30px -10px hsl(220 25% 6% / 0.5);
     --shadow-intense: 0 20px 60px -10px hsl(215 100% 58% / 0.4);
 
+    /* Section backgrounds */
+    --section-background: #0a0a13;
+    --section-background-alt: #0a0a13;
+
     /* Background patterns */
     --pattern-dots: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
     --pattern-grid: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
@@ -112,6 +116,10 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(135deg, hsl(210 40% 98%) 0%, hsl(214.3 31.8% 91.4%) 50%, hsl(215 100% 58% / 0.1) 100%);
     --shadow-glow: 0 0 40px hsl(215 100% 58% / 0.2);
 
+    /* Section backgrounds - Light mode */
+    --section-background: hsl(210 40% 98%);
+    --section-background-alt: hsl(210 40% 98%);
+
     /* Light mode patterns */
     --pattern-dots: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.1) 1px, transparent 0);
     --pattern-grid: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
@@ -129,4 +137,13 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom section background utilities */
+.section-bg {
+  background-color: var(--section-background);
+}
+
+.section-bg-alt {
+  background-color: var(--section-background-alt);
 }

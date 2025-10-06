@@ -6,6 +6,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Wave1, Wave2, Wave3, Wave4, Wave5 } from '@/components/ui/wave-graphics';
 import { getPublicFAQs, type FAQ } from '@/lib/user-services-api';
 
 // Type for the API response
@@ -47,7 +48,13 @@ export function FAQ() {
 
   if (loading) {
     return (
-      <section id="faq" className="py-20 bg-muted/30 relative overflow-hidden">
+      <section id="faq" className="py-20 relative overflow-hidden section-bg-alt">
+        {/* Cloud Layers - Non-overlapping light pattern */}
+        <Wave4 className="absolute top-28 right-1/6 w-1/7 h-auto opacity-[0.02] z-1 filter grayscale" />
+        <Wave2 className="absolute bottom-36 left-1/5 w-1/6 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+        <Wave1 className="absolute top-12 left-2/3 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale" />
+        <Wave3 className="absolute bottom-12 right-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+        
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -58,7 +65,13 @@ export function FAQ() {
     );
   }
   return (
-    <section id="faq" className="py-20 bg-muted/30 relative overflow-hidden">
+    <section id="faq" className="py-20 relative overflow-hidden section-bg-alt">
+      {/* Cloud Layers - Non-overlapping light pattern (Wave5 removed) */}
+      <Wave3 className="absolute top-20 left-1/6 w-1/6 h-auto opacity-[0.02] z-1 filter grayscale" />
+      {/* <Wave1 className="absolute bottom-28 right-1/5 w-1/7 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" /> */}
+      <Wave2 className="absolute top-40 right-2/3 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale" />
+      <Wave4 className="absolute bottom-12 left-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">

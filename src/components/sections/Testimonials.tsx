@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Star, Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import {
+  Wave1,
+  Wave2,
+  Wave3,
+  Wave4,
+  Wave5,
+} from "@/components/ui/wave-graphics";
 import {
   getPublicTestimonials,
   getMyTestimonial,
@@ -203,8 +204,14 @@ export function Testimonials() {
 
   if (loading) {
     return (
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4">
+      <section className="py-16 relative overflow-hidden section-bg-alt">
+        {/* Cloud Layers - Non-overlapping light pattern */}
+        <Wave3 className="absolute top-20 left-1/6 w-1/7 h-auto opacity-[0.02] z-1 filter grayscale" />
+        {/* <Wave1 className="absolute bottom-32 right-1/5 w-1/6 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" /> */}
+        {/* <Wave2 className="absolute top-8 right-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale" /> */}
+        <Wave4 className="absolute bottom-8 left-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+
+        <div className="container mx-auto px-4 relative z-10">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p>Loading testimonials...</p>
@@ -215,8 +222,14 @@ export function Testimonials() {
   }
 
   return (
-    <section className="py-16 bg-background">
-      <div className="container mx-auto px-4">
+    <section className="py-16 relative overflow-hidden section-bg-alt">
+      {/* Cloud Layers - Non-overlapping light pattern */}
+      {/* <Wave2 className="absolute top-16 right-1/5 w-1/6 h-auto opacity-[0.02] z-1 filter grayscale" /> */}
+      <Wave4 className="absolute bottom-24 left-1/6 w-1/7 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+      {/* <Wave1 className="absolute top-36 left-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale" /> */}
+      <Wave3 className="absolute bottom-8 right-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">What Our Users Say</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -237,15 +250,11 @@ export function Testimonials() {
           </Alert>
         )}
 
-        {/* Testimonials Grid */}
         {testimonials.length > 0 || myTestimonial ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 ">
+          <div className="flex flex-wrap justify-center gap-6">
             {/* User's own testimonial (if exists) */}
             {myTestimonial && (
-              <Card
-                key={myTestimonial.id}
-                className="h-full min-h-[280px] relative border-primary/50"
-              >
+              <Card className="h-full min-h-[280px] relative border-primary/50 w-full max-w-sm mx-auto">
                 {/* Edit/Delete actions */}
                 <div className="absolute top-2 right-2 flex gap-1">
                   <Button
@@ -279,43 +288,47 @@ export function Testimonials() {
                 </div>
 
                 <CardContent className="p-6 flex flex-col h-full pt-12">
-                  {/* Quote marks and text at top */}
-                  <div className="mb-4 flex-1">
-                    <div className="relative">
-                      <span className="absolute -left-2 -top-2 text-3xl text-muted-foreground">
-                        "
-                      </span>
-                      <blockquote className="text-lg pl-4 pt-2">
-                        {myTestimonial.text}
+                  {/* Background quote image */}
+                  <div
+                    className="absolute inset-0 bg-no-repeat bg-center bg-contain opacity-5 pointer-events-none"
+                    style={{
+                      backgroundImage: "url('/quote.png')",
+                      backgroundSize: "120px 120px",
+                    }}
+                  />
+
+                  {/* Main content container - vertically centered */}
+                  <div className="flex flex-col justify-center items-center h-full space-y-4">
+                    {/* Quote text */}
+                    <div className="flex-1 flex items-center justify-center w-full">
+                      <blockquote className="text-lg text-center leading-relaxed px-2 font-serif italic text-slate-700 dark:text-slate-300">
+                        "{myTestimonial.text}"
                       </blockquote>
-                      <span className="absolute -right-2 -bottom-6 text-3xl text-muted-foreground">
-                        "
+                    </div>
+
+                    {/* Stars */}
+                    <div className="flex justify-center w-full">
+                      {renderStars(myTestimonial.rating)}
+                    </div>
+
+                    {/* User info and date */}
+                    <div className="flex flex-col items-center gap-1 w-full">
+                      <div className="text-sm font-semibold text-center">
+                        {myTestimonial.user
+                          ? `${myTestimonial.user.first_name} ${myTestimonial.user.last_name}`
+                          : "You"}
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(myTestimonial.created_at).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
                       </span>
                     </div>
-                  </div>
-
-                  {/* Stars below the text */}
-                  <div className="mb-4">
-                    {renderStars(myTestimonial.rating)}
-                  </div>
-
-                  {/* User info and date at bottom */}
-                  <div className="flex items-center justify-between mt-auto">
-                    <div className="text-sm font-medium">
-                      {myTestimonial.user
-                        ? `${myTestimonial.user.first_name} ${myTestimonial.user.last_name}`
-                        : "You"}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(myTestimonial.created_at).toLocaleDateString(
-                        "en-GB",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )}
-                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -323,43 +336,52 @@ export function Testimonials() {
 
             {/* Public testimonials */}
             {testimonials.map((testimonial) => (
-              <Card key={testimonial.id} className="h-full min-h-[280px]">
-                <CardContent className="p-6 flex flex-col h-full">
-                  {/* Quote marks and text at top */}
-                  <div className="mb-4 flex-1">
-                    <div className="relative">
-                      <span className="absolute -left-2 -top-2 text-3xl text-muted-foreground">
-                        "
-                      </span>
-                      <blockquote className="text-lg pl-4 pt-2">
-                        {testimonial.text}
+              <Card
+                key={testimonial.id}
+                className="h-full min-h-[280px] w-full max-w-sm mx-auto"
+              >
+                <CardContent className="p-6 flex flex-col h-full min-h-[280px] justify-center">
+                  {/* Background quote image */}
+                  <div
+                    className="absolute inset-0 bg-no-repeat bg-center bg-contain opacity-5 pointer-events-none top-1/3"
+                    style={{
+                      backgroundImage: "url('/quote.png')",
+                      backgroundSize: "220px 220px",
+                    }}
+                  />
+
+                  {/* Main content container - vertically centered */}
+                  <div className="flex flex-col justify-center items-center h-full space-y-4">
+                    {/* Quote text */}
+                    <div className="flex-1 flex items-center justify-center w-full">
+                      <blockquote className="text-lg text-center leading-relaxed px-2 font-serif italic text-slate-700 dark:text-slate-300">
+                        "{testimonial.text}"
                       </blockquote>
-                      <span className="absolute -right-2 -bottom-6 text-3xl text-muted-foreground">
-                        "
+                    </div>
+
+                    {/* Stars */}
+                    <div className="flex justify-center w-full">
+                      {renderStars(testimonial.rating)}
+                    </div>
+
+                    {/* User info and date */}
+                    <div className="flex flex-col items-center gap-1 w-full">
+                      <div className="text-sm font-semibold text-center">
+                        {testimonial.user
+                          ? `${testimonial.user.first_name} ${testimonial.user.last_name}`
+                          : "Anonymous User"}
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(testimonial.created_at).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
                       </span>
                     </div>
-                  </div>
-
-                  {/* Stars below the text */}
-                  <div className="mb-4">{renderStars(testimonial.rating)}</div>
-
-                  {/* User info and date at bottom */}
-                  <div className="flex items-center justify-between mt-auto">
-                    <div className="text-sm font-medium">
-                      {testimonial.user
-                        ? `${testimonial.user.first_name} ${testimonial.user.last_name}`
-                        : "Anonymous User"}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(testimonial.created_at).toLocaleDateString(
-                        "en-GB",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )}
-                    </span>
                   </div>
                 </CardContent>
               </Card>

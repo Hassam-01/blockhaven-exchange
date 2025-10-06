@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Wave1, Wave2, Wave3, Wave4, Wave5 } from '@/components/ui/wave-graphics';
 import { useToast } from '@/hooks/use-toast';
 import { submitContactForm, type ContactFormData } from '@/lib/contact-api';
 
@@ -49,7 +50,12 @@ export function Contact() {
   };
 
   return (
-    <section id="contact" className="py-20 bg-background relative overflow-hidden">
+    <section id="contact" className="py-20 relative overflow-hidden section-bg">
+      {/* Cloud Layers - Non-overlapping light pattern */}
+      <Wave1 className="absolute top-24 left-1/5 w-1/7 h-auto opacity-[0.02] z-1 filter grayscale" />
+      <Wave2 className="absolute bottom-32 right-1/6 w-1/6 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
+      <Wave3 className="absolute top-8 right-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale" />
+      <Wave4 className="absolute bottom-8 left-2/5 w-1/8 h-auto opacity-[0.02] z-1 filter grayscale scale-x-[-1]" />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">

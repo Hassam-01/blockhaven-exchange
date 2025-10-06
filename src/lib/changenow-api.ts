@@ -2,8 +2,12 @@
 // Documentation: https://changenow.io/api/docs
 
 const CHANGENOW_API_BASE = "https://api.changenow.io/v1";
-const CHANGENOW_API_KEY =
-  "4d2e85bbf550b94bd9647732dc3b9984ac14b560a1236f8f142fe82f9e8ce583";
+const CHANGENOW_API_KEY = import.meta.env.VITE_CHANGENOW_API_KEY;
+
+// Validate API key
+if (!CHANGENOW_API_KEY) {
+  console.error('VITE_CHANGENOW_API_KEY environment variable is not set');
+}
 
 export interface CryptoCurrency {
   ticker: string;
