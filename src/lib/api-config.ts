@@ -8,6 +8,8 @@ export const API_CONFIG = {
       LOGIN: '/api/users/login',
       PROFILE: '/api/users/profile',
       PASSWORD: '/api/users/password',
+      FORGOT_PASSWORD: '/api/users/forgot-password',
+      RESET_PASSWORD: '/api/users/reset-password',
     },
     // FAQ endpoints
     FAQS: {

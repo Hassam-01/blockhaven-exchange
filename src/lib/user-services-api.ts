@@ -58,6 +58,15 @@ export interface UpdatePasswordRequest {
   newPassword: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
 export interface FAQ {
   id: string;
   question: string;
@@ -260,6 +269,30 @@ export const userLogin = async (
 ): Promise<{ token: string; user: User }> => {
   return apiCall<{ token: string; user: User }>(
     API_CONFIG.ENDPOINTS.USERS.LOGIN,
+    {
+      method: HTTP_METHODS.POST,
+      body: JSON.stringify(data),
+    }
+  );
+};
+
+export const forgotPassword = async (
+  data: ForgotPasswordRequest
+): Promise<{ success: boolean; message: string }> => {
+  return apiCall<{ success: boolean; message: string }>(
+    API_CONFIG.ENDPOINTS.USERS.FORGOT_PASSWORD,
+    {
+      method: HTTP_METHODS.POST,
+      body: JSON.stringify(data),
+    }
+  );
+};
+
+export const resetPassword = async (
+  data: ResetPasswordRequest
+): Promise<{ success: boolean; message: string }> => {
+  return apiCall<{ success: boolean; message: string }>(
+    API_CONFIG.ENDPOINTS.USERS.RESET_PASSWORD,
     {
       method: HTTP_METHODS.POST,
       body: JSON.stringify(data),

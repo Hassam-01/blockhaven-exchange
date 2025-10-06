@@ -28,6 +28,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { userSignup, userLogin } from "@/lib/user-services-api";
 import type { SignupRequest, LoginRequest } from "@/lib/user-services-api";
+import { ForgotPasswordPopover } from "./ForgotPasswordPopover";
 
 interface SignInPopoverProps {
   children: React.ReactNode;
@@ -53,6 +54,7 @@ const AuthContent = ({
   showConfirmPassword,
   setShowConfirmPassword,
   isLoading,
+  onForgotPassword,
 }: {
   error: string;
   success: string;
@@ -72,6 +74,7 @@ const AuthContent = ({
   showConfirmPassword: boolean;
   setShowConfirmPassword: (show: boolean) => void;
   isLoading: boolean;
+  onForgotPassword: () => void;
 }) => (
   <div className="p-6">
     <Tabs
@@ -190,6 +193,19 @@ const AuthContent = ({
           >
             {isLoading ? "Signing in..." : "Sign In"}
           </Button>
+
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              onClick={onForgotPassword}
+              className="text-muted-foreground hover:text-foreground"
+              disabled={isLoading}
+            >
+              Forgot your password?
+            </Button>
+          </div>
         </form>
       </TabsContent>
 
@@ -353,6 +369,7 @@ export function SignInPopover({ children }: SignInPopoverProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const isMobile = useIsMobile();
 
   // Login form state
@@ -407,7 +424,7 @@ export function SignInPopover({ children }: SignInPopoverProps) {
     setSuccess("");
   };
 
-  const resetForms = () => {
+  const resetForms = (resetForgotPassword = true) => {
     setLoginData({ email: "", password: "" });
     setSignupData({
       email: "",
@@ -421,6 +438,26 @@ export function SignInPopover({ children }: SignInPopoverProps) {
     setSuccess("");
     setShowPassword(false);
     setShowConfirmPassword(false);
+    if (resetForgotPassword) {
+      setShowForgotPassword(false);
+    }
+  };
+
+  const handleForgotPassword = () => {
+    console.log("Forgot password clicked - showing forgot password popover");
+    setIsOpen(false);
+    setShowForgotPassword(true);
+  };
+
+  const handleBackToLogin = () => {
+    console.log("Back to login clicked");
+    setShowForgotPassword(false);
+    setIsOpen(true);
+  };
+
+  const handleCloseForgotPassword = () => {
+    console.log("Close forgot password clicked");
+    setShowForgotPassword(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -545,51 +582,51 @@ export function SignInPopover({ children }: SignInPopoverProps) {
     }
   };
 
-  // Render Dialog for mobile, Popover for desktop
-  if (isMobile) {
-    return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent 
-          className="w-[90vw] max-w-md max-h-[85vh] overflow-y-auto p-0 !top-[35%]"
-          onInteractOutside={() => resetForms()}
-        >
-          <DialogTitle className="sr-only">Authentication</DialogTitle>
-          <DialogDescription className="sr-only">
-            Sign in to your existing account or create a new account to access BlockHaven services
-          </DialogDescription>
-          <AuthContent
-            error={error}
-            success={success}
-            setError={setError}
-            setSuccess={setSuccess}
-            handleTabChange={handleTabChange}
-            handleLogin={handleLogin}
-            handleSignup={handleSignup}
-            loginData={loginData}
-            setLoginData={setLoginData}
-            signupData={signupData}
-            setSignupData={setSignupData}
-            confirmPassword={confirmPassword}
-            setConfirmPassword={setConfirmPassword}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
-            showConfirmPassword={showConfirmPassword}
-            setShowConfirmPassword={setShowConfirmPassword}
-            isLoading={isLoading}
-          />
-        </DialogContent>
-      </Dialog>
-    );
-  }
+  // Create mobile dialog component
+  const mobileDialog = (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent 
+        className="w-[90vw] max-w-md max-h-[85vh] overflow-y-auto p-0 !top-[35%]"
+        onInteractOutside={() => resetForms(false)}
+      >
+        <DialogTitle className="sr-only">Authentication</DialogTitle>
+        <DialogDescription className="sr-only">
+          Sign in to your existing account or create a new account to access BlockHaven services
+        </DialogDescription>
+        <AuthContent
+          error={error}
+          success={success}
+          setError={setError}
+          setSuccess={setSuccess}
+          handleTabChange={handleTabChange}
+          handleLogin={handleLogin}
+          handleSignup={handleSignup}
+          loginData={loginData}
+          setLoginData={setLoginData}
+          signupData={signupData}
+          setSignupData={setSignupData}
+          confirmPassword={confirmPassword}
+          setConfirmPassword={setConfirmPassword}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          showConfirmPassword={showConfirmPassword}
+          setShowConfirmPassword={setShowConfirmPassword}
+          isLoading={isLoading}
+          onForgotPassword={handleForgotPassword}
+        />
+      </DialogContent>
+    </Dialog>
+  );
 
-  return (
+  // Create desktop popover component
+  const desktopPopover = (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         className="w-96 p-0"
         align="end"
-        onInteractOutside={() => resetForms()}
+        onInteractOutside={() => resetForms(false)}
       >
         <AuthContent
           error={error}
@@ -610,8 +647,21 @@ export function SignInPopover({ children }: SignInPopoverProps) {
           showConfirmPassword={showConfirmPassword}
           setShowConfirmPassword={setShowConfirmPassword}
           isLoading={isLoading}
+          onForgotPassword={handleForgotPassword}
         />
       </PopoverContent>
     </Popover>
+  );
+
+  return (
+    <>
+      {console.log("SignInPopover render - showForgotPassword:", showForgotPassword)}
+      {isMobile ? mobileDialog : desktopPopover}
+      <ForgotPasswordPopover
+        isOpen={showForgotPassword}
+        onClose={handleCloseForgotPassword}
+        onBackToLogin={handleBackToLogin}
+      />
+    </>
   );
 }

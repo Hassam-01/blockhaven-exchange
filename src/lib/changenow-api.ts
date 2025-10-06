@@ -22,6 +22,18 @@ export interface CryptoCurrency {
   logo?: string;
 }
 
+// Raw currency data from ChangeNow API
+interface RawCurrencyData {
+  ticker: string;
+  name: string;
+  image: string;
+  hasExternalId: boolean;
+  isFiat: boolean;
+  featured: boolean;
+  isStable: boolean;
+  supportsFixedRate: boolean;
+}
+
 export interface ExchangeEstimate {
   estimatedAmount: string;
   transactionSpeedForecast: string;
@@ -86,9 +98,9 @@ export async function getAvailableCurrencies(): Promise<CryptoCurrency[]> {
       `${CHANGENOW_API_BASE}/currencies?active=true&api_key=${CHANGENOW_API_KEY}`
     );
     if (!response.ok) throw new Error("Failed to fetch currencies");
-    const currencies = await response.json();
+    const currencies: RawCurrencyData[] = await response.json();
     // console.log(currencies)
-    return currencies.map((currency: any) => ({
+    return currencies.map((currency: RawCurrencyData) => ({
       ...currency,
       color: getCoinColor(currency.ticker),
       logo: getCoinLogo(currency.ticker),

@@ -1,73 +1,97 @@
-# Welcome to your Lovable project
+# BlockHaven Exchange
 
-## Project info
+A modern cryptocurrency exchange platform built with React, TypeScript, and Vite.
 
-**URL**: https://lovable.dev/projects/63722217-8fcd-4c0e-b3f9-5e9f61250c16
+## Features
 
-## How can I edit this code?
+- Real-time cryptocurrency exchange rates
+- Support for multiple cryptocurrencies
+- User authentication and profiles
+- Transaction tracking
+- Admin dashboard
+- Responsive design with dark/light theme support
+- Chat support integration
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Components**: Radix UI, shadcn/ui
+- **Styling**: Tailwind CSS
+- **State Management**: React Query
+- **Routing**: React Router DOM
+- **Form Handling**: React Hook Form with Zod validation
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/63722217-8fcd-4c0e-b3f9-5e9f61250c16) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js (v18 or higher)
+- npm or bun package manager
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Clone the repository:
+```bash
+git clone [your-repository-url]
+cd blockhaven-exchange
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies:
+```bash
+npm install
+# or
+bun install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
 
-**Use GitHub Codespaces**
+Edit the `.env` file with your configuration:
+```bash
+VITE_API_BASE_URL=your_backend_api_url
+VITE_CHANGENOW_API_KEY=your_changenow_api_key
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+4. Start the development server:
+```bash
+npm run dev
+# or
+bun run dev
+```
 
-## What technologies are used for this project?
+The application will be available at `http://localhost:9009`
 
-This project is built with:
+## Building for Production
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+npm run build
+# or
+bun run build
+```
 
-## How can I deploy this project?
+This will create a `dist` folder with optimized production files.
 
-Simply open [Lovable](https://lovable.dev/projects/63722217-8fcd-4c0e-b3f9-5e9f61250c16) and click on Share -> Publish.
+## Preview Production Build
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+npm run preview
+# or
+bun run preview
+```
 
-Yes, you can!
+## Deployment
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+The application can be deployed to any static hosting service like Vercel, Netlify, or AWS S3 + CloudFront.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Environment Configuration
+
+Make sure to set the following environment variables in your production environment:
+
+- `VITE_API_BASE_URL`: Your backend API URL
+- `VITE_CHANGENOW_API_KEY`: Your ChangeNow API key
+
+## License
+
+This project is proprietary software. All rights reserved.

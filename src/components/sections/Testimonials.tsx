@@ -297,37 +297,48 @@ export function Testimonials() {
                     }}
                   />
 
+                  {/* Header with name and date */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="text-sm font-semibold">
+                      {myTestimonial.user
+                        ? `${myTestimonial.user.first_name} ${myTestimonial.user.last_name}`
+                        : "You"}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(myTestimonial.created_at).toLocaleDateString(
+                        "en-GB",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
+                    </span>
+                  </div>
+
                   {/* Main content container - vertically centered */}
-                  <div className="flex flex-col justify-center items-center h-full space-y-4">
-                    {/* Quote text */}
-                    <div className="flex-1 flex items-center justify-center w-full">
+                  <div className="flex flex-col justify-between flex-1">
+                    {/* Quote text - centered in available space */}
+                    <div className="flex items-center justify-center flex-1 w-full">
                       <blockquote className="text-lg text-center leading-relaxed px-2 font-serif italic text-slate-700 dark:text-slate-300">
                         "{myTestimonial.text}"
                       </blockquote>
                     </div>
 
-                    {/* Stars */}
-                    <div className="flex justify-center w-full">
-                      {renderStars(myTestimonial.rating)}
-                    </div>
-
-                    {/* User info and date */}
-                    <div className="flex flex-col items-center gap-1 w-full">
-                      <div className="text-sm font-semibold text-center">
-                        {myTestimonial.user
-                          ? `${myTestimonial.user.first_name} ${myTestimonial.user.last_name}`
-                          : "You"}
+                    {/* Stars at bottom */}
+                    <div className="flex justify-center w-full mt-4">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-10 h-10 ${
+                              star <= myTestimonial.rating
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(myTestimonial.created_at).toLocaleDateString(
-                          "en-GB",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
-                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -340,7 +351,7 @@ export function Testimonials() {
                 key={testimonial.id}
                 className="h-full min-h-[280px] w-full max-w-sm mx-auto"
               >
-                <CardContent className="p-6 flex flex-col h-full min-h-[280px] justify-center">
+                <CardContent className="p-6 flex flex-col h-full min-h-[280px]">
                   {/* Background quote image */}
                   <div
                     className="absolute inset-0 bg-no-repeat bg-center bg-contain opacity-5 pointer-events-none top-1/3"
@@ -350,37 +361,48 @@ export function Testimonials() {
                     }}
                   />
 
+                  {/* Header with name and date */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="text-sm font-semibold">
+                      {testimonial.user
+                        ? `${testimonial.user.first_name} ${testimonial.user.last_name}`
+                        : "Anonymous User"}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(testimonial.created_at).toLocaleDateString(
+                        "en-GB",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
+                    </span>
+                  </div>
+
                   {/* Main content container - vertically centered */}
-                  <div className="flex flex-col justify-center items-center h-full space-y-4">
-                    {/* Quote text */}
-                    <div className="flex-1 flex items-center justify-center w-full">
+                  <div className="flex flex-col justify-between flex-1">
+                    {/* Quote text - centered in available space */}
+                    <div className="flex items-center justify-center flex-1 w-full">
                       <blockquote className="text-lg text-center leading-relaxed px-2 font-serif italic text-slate-700 dark:text-slate-300">
                         "{testimonial.text}"
                       </blockquote>
                     </div>
 
-                    {/* Stars */}
-                    <div className="flex justify-center w-full">
-                      {renderStars(testimonial.rating)}
-                    </div>
-
-                    {/* User info and date */}
-                    <div className="flex flex-col items-center gap-1 w-full">
-                      <div className="text-sm font-semibold text-center">
-                        {testimonial.user
-                          ? `${testimonial.user.first_name} ${testimonial.user.last_name}`
-                          : "Anonymous User"}
+                    {/* Stars at bottom */}
+                    <div className="flex justify-center w-full mt-4">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-6 h-6 ${
+                              star <= testimonial.rating
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(testimonial.created_at).toLocaleDateString(
-                          "en-GB",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
-                      </span>
                     </div>
                   </div>
                 </CardContent>
