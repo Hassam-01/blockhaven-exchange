@@ -50,7 +50,7 @@ export function TermsPopover({ children }: TermsPopoverProps) {
               <div className="space-y-1">
                 <div>
                   3.1 BlockHaven provides access to cryptocurrency swap services
-                  through third-party providers, including ChangeNOW.
+                  through third-party providers.
                 </div>
                 <div>
                   3.2 BlockHaven is a facilitator and does not custody user

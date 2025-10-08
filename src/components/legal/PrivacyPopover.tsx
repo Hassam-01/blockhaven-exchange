@@ -105,7 +105,7 @@ export function PrivacyPopover({ children }: PrivacyPopoverProps) {
               <div className="space-y-1">
                 <div>
                   7.1 Information may be shared with trusted third-party
-                  providers (e.g., ChangeNOW) for transaction processing.
+                  providers for transaction processing.
                 </div>
                 <div>
                   7.2 Information may also be shared when required by law
