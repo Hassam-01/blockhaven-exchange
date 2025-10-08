@@ -29,17 +29,17 @@ export function TransactionLookup() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
-            Track Transaction
+            Track Order
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="transaction-id" className="text-sm font-medium">
-              Transaction ID
+              Order ID
             </label>
             <Input
               id="transaction-id"
-              placeholder="Enter your transaction ID"
+              placeholder="Enter your order ID"
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -50,7 +50,7 @@ export function TransactionLookup() {
             disabled={!transactionId.trim()}
             className="w-full"
           >
-            Track Transaction
+            Track Order
           </Button>
         </CardContent>
       </Card>

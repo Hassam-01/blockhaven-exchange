@@ -44,20 +44,20 @@ export function TransactionTrackingPopover({ isMobile = false }: TransactionTrac
             className={`flex items-center gap-2 ${isMobile ? 'w-full justify-start' : ''}`}
           >
             <Search className="h-4 w-4" />
-            <span className={isMobile ? '' : 'hidden sm:inline'}>Track Transaction</span>
+            <span className={isMobile ? '' : 'hidden sm:inline'}>Track Order</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80" align={isMobile ? "center" : "end"}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <h4 className="font-medium leading-none">Track Transaction</h4>
+              <h4 className="font-medium leading-none">Track Order</h4>
               <p className="text-sm text-muted-foreground">
-                Enter your transaction ID to track its status
+                Enter your order ID to track its status
               </p>
             </div>
             <div className="space-y-3">
               <Input
-                placeholder="Enter transaction ID"
+                placeholder="Enter order ID"
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -70,7 +70,7 @@ export function TransactionTrackingPopover({ isMobile = false }: TransactionTrac
                 size="sm"
               >
                 <Search className="h-4 w-4 mr-2" />
-                Track Transaction
+                Track Order
               </Button>
             </div>
           </div>

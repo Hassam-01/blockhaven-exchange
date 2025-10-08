@@ -68,7 +68,7 @@ const getStatusConfig = (status: string) => {
         textColor: 'text-green-700',
         bgColor: 'bg-green-50',
         label: 'Completed',
-        description: 'Transaction completed successfully'
+        description: 'Order completed successfully'
       };
     case 'failed':
     case 'refunded':
@@ -78,7 +78,7 @@ const getStatusConfig = (status: string) => {
         textColor: 'text-red-700',
         bgColor: 'bg-red-50',
         label: 'Failed',
-        description: 'Transaction failed or was refunded'
+        description: 'Order failed or was refunded'
       };
     default:
       return {
@@ -108,24 +108,14 @@ export function TransactionTracker({ transactionId, isOpen, onClose }: Transacti
       if (status) {
         setTransaction(status);
         setLastUpdated(new Date());
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch transaction status"
-        });
       }
+      // No toast needed - UI already shows "not found" message
     } catch (error) {
-      console.error('Error fetching transaction status:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch transaction status"
-      });
+      // No toast needed - UI already shows "not found" message
     } finally {
       setIsLoading(false);
     }
-  }, [transactionId, toast]);
+  }, [transactionId]);
 
   useEffect(() => {
     if (isOpen && transactionId) {
@@ -177,17 +167,17 @@ export function TransactionTracker({ transactionId, isOpen, onClose }: Transacti
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RefreshCw className="h-5 w-5" />
-            Transaction Tracker
+            Order Tracker
           </DialogTitle>
           <DialogDescription>
-            Track your exchange transaction in real-time
+            Track your exchange order in real-time
           </DialogDescription>
         </DialogHeader>
 
         {isLoading && !transaction ? (
           <div className="flex items-center justify-center py-8">
             <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2">Loading transaction details...</span>
+            <span className="ml-2">Loading order details...</span>
           </div>
         ) : transaction ? (
           <div className="space-y-6">
@@ -220,21 +210,21 @@ export function TransactionTracker({ transactionId, isOpen, onClose }: Transacti
             {/* Transaction Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Transaction Details</CardTitle>
+                <CardTitle>Order Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Transaction ID */}
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div>
-                    <p className="text-sm font-medium">Transaction ID</p>
+                    <p className="text-sm font-medium">Order ID</p>
                     <p className="text-xs text-muted-foreground break-all">{transaction.id}</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard(transaction.id, 'Transaction ID')}
+                    onClick={() => copyToClipboard(transaction.id, 'Order ID')}
                   >
-                    {copiedField === 'Transaction ID' ? (
+                    {copiedField === 'Order ID' ? (
                       <Check className="h-4 w-4 text-green-500" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -377,9 +367,9 @@ export function TransactionTracker({ transactionId, isOpen, onClose }: Transacti
         ) : (
           <div className="text-center py-8">
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg font-medium">Transaction not found</p>
+            <p className="text-lg font-medium">Order not found</p>
             <p className="text-sm text-muted-foreground">
-              Unable to load transaction details. Please check the transaction ID and try again.
+              Unable to load order details. Please check the order ID and try again.
             </p>
           </div>
         )}

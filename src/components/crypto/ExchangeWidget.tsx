@@ -647,7 +647,7 @@ export function ExchangeWidget() {
           toast({
             title: "Exchange Created",
             description:
-              "Your exchange transaction has been created successfully.",
+              "Your exchange order has been created successfully.",
           });
         } else {
           // throw new Error("Failed to create transaction");
@@ -655,9 +655,9 @@ export function ExchangeWidget() {
       } catch (error) {
         console.error("Transaction creation error:",  );
         toast({
-          title: "Transaction Failed",
+          title: "Order Failed",
           description:
-            "Failed to create exchange transaction. Please try again.",
+            "Failed to create exchange order. Please try again.",
           variant: "destructive",
         });
       } finally {
@@ -732,7 +732,7 @@ export function ExchangeWidget() {
           // For fiat transactions, we can show the redirect URL or transaction details
           toast({
             title: `${type === "buy" ? "Buy" : "Sell"} Order Created`,
-            description: `Your ${type} transaction has been created successfully. Transaction ID: ${fiatTransaction.id}`,
+            description: `Your ${type} order has been created successfully. Order ID: ${fiatTransaction.id}`,
           });
 
           // If there's a redirect URL, you might want to open it
@@ -745,8 +745,8 @@ export function ExchangeWidget() {
       } catch (error) {
         console.error("Fiat transaction creation error:", error);
         toast({
-          title: `${type === "buy" ? "Buy" : "Sell"} Transaction Failed`,
-          description: `Failed to create ${type} transaction. Please try again.`,
+          title: `${type === "buy" ? "Buy" : "Sell"} Order Failed`,
+          description: `Failed to create ${type} order. Please try again.`,
           variant: "destructive",
         });
       } finally {
@@ -1041,7 +1041,7 @@ export function ExchangeWidget() {
               Exchange Created Successfully
             </DialogTitle>
             <DialogDescription>
-              Your exchange transaction has been created. Please send your{" "}
+              Your exchange order has been created. Please send your{" "}
               {fromCurrency.toUpperCase()} to the address below.
             </DialogDescription>
           </DialogHeader>
@@ -1051,7 +1051,7 @@ export function ExchangeWidget() {
               <Alert>
                 <Shield className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Transaction ID:</strong> {currentTransaction.id}
+                  <strong>Order ID:</strong> {currentTransaction.id}
                 </AlertDescription>
               </Alert>
 
@@ -1129,7 +1129,7 @@ export function ExchangeWidget() {
                     }
                   }}
                 >
-                  Track Transaction
+                  Track Order
                 </Button>
               </div>
             </div>
