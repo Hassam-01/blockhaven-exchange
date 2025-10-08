@@ -18,6 +18,17 @@ export const ExchangeTypeSelector = memo(({
 }: ExchangeTypeSelectorProps) => {
   const isFixed = exchangeType === 'fixed';
 
+  // Format rate to remove trailing zeros but keep .00 for whole numbers
+  const formatRate = (rate: number): string => {
+    const numRate = Number(rate);
+    // If it's a whole number (like 1.00), keep the .00
+    if (numRate % 1 === 0) {
+      return numRate.toFixed(2);
+    }
+    // Otherwise, remove trailing zeros
+    return parseFloat(numRate.toString()).toString();
+  };
+
   return (
     <div className="space-y-3">
       <label className="text-sm font-medium text-foreground">Order type</label>
@@ -44,7 +55,7 @@ export const ExchangeTypeSelector = memo(({
             isFixed ? 'text-white' : 'text-muted-foreground'
           )}
         >
-          Fixed rate ({charges.fixed.rate}%)
+          Fixed rate ({formatRate(charges.fixed.rate)}%)
         </Button>
 
         <Button
@@ -58,7 +69,7 @@ export const ExchangeTypeSelector = memo(({
             !isFixed ? 'text-white' : 'text-muted-foreground'
           )}
         >
-          Float rate ({charges.floating.rate}%)
+          Float rate ({formatRate(charges.floating.rate)}%)
         </Button>
       </div>
     </div>
