@@ -117,13 +117,18 @@ export function ExchangeWidget() {
   const [showTransactionTracker, setShowTransactionTracker] = useState(false);
   const [trackingTransactionId, setTrackingTransactionId] = useState<string>("");
   
+  // Currency selector popover states
+  const [fromCurrencyPopoverOpen, setFromCurrencyPopoverOpen] = useState(false);
+  const [toCurrencyPopoverOpen, setToCurrencyPopoverOpen] = useState(false);
+  
   const { toast } = useToast();
 
-  // Memoize filtered currencies for better performance
+  // Memoize filtered currencies for better performance - now shows ALL available currencies
   const filteredCurrencies = useMemo(() => {
     return allCurrencies
-      .filter((c) => !c.isFiat)
+      .filter((c) => !c.isFiat) // Only exclude fiat currencies
       .sort((a, b) => {
+        // Sort by featured first, then alphabetically
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
         return a.name.localeCompare(b.name);
@@ -285,6 +290,26 @@ export function ExchangeWidget() {
     setSelectedToCurrency(currency || null);
     setLeftColor(currency?.color || "");
   }, [toCurrency, allCurrencies]);
+
+  // Close currency selector popovers when page scrolls
+  useEffect(() => {
+    const handleScroll = () => {
+      if (fromCurrencyPopoverOpen) {
+        setFromCurrencyPopoverOpen(false);
+      }
+      if (toCurrencyPopoverOpen) {
+        setToCurrencyPopoverOpen(false);
+      }
+    };
+
+    // Add scroll event listener to window
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [fromCurrencyPopoverOpen, toCurrencyPopoverOpen]);
 
   // Check for stored fixed rate data on component mount and when currencies change
   useEffect(() => {
@@ -810,6 +835,8 @@ export function ExchangeWidget() {
                     onValueChange={handleFromCurrencyChange}
                     currencies={filteredCurrencies}
                     selectedCurrency={selectedFromCurrency}
+                    open={fromCurrencyPopoverOpen}
+                    onOpenChange={setFromCurrencyPopoverOpen}
                   />
                   {fromAmount && selectedFromCurrency && (
                     <div className="text-xs text-muted-foreground">
@@ -885,6 +912,8 @@ export function ExchangeWidget() {
                     onValueChange={handleToCurrencyChange}
                     currencies={filteredCurrencies}
                     selectedCurrency={selectedToCurrency}
+                    open={toCurrencyPopoverOpen}
+                    onOpenChange={setToCurrencyPopoverOpen}
                   />
                   {toAmount && selectedToCurrency && (
                     <div className="text-xs text-muted-foreground">
