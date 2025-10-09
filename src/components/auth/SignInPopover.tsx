@@ -513,13 +513,17 @@ export function SignInPopover({ children }: SignInPopoverProps) {
         setUserEmail(loginData.email);
         setShowTwoFactor(true);
         setSuccess("Please check your email for the verification code.");
-      } else if (response.data) {
+      } else if (response.data || (response.user && response.token)) {
         // Regular login without 2FA
         setSuccess("Login successful!");
 
+        // Handle both response formats: response.data or direct response
+        const userData = response.data ? response.data.user : response.user;
+        const token = response.data ? response.data.token : response.token;
+
         // Store token in localStorage
-        localStorage.setItem("auth_token", response.data.token);
-        localStorage.setItem("user_data", JSON.stringify(response.data.user));
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_data", JSON.stringify(userData));
 
         // Close popover after successful login
         setTimeout(() => {
@@ -529,6 +533,7 @@ export function SignInPopover({ children }: SignInPopoverProps) {
           window.dispatchEvent(new CustomEvent("auth-state-changed"));
         }, 1000);
       } else {
+        console.log("response: ", response)
         throw new Error("Invalid response format");
       }
     } catch (err) {

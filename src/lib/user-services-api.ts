@@ -28,12 +28,15 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  success: boolean;
-  message: string;
+  success?: boolean;
+  message?: string;
   data?: {
     token: string;
     user: User;
   };
+  // Direct response format (for backward compatibility)
+  token?: string;
+  user?: User;
   requiresTwoFactor?: boolean;
   pendingToken?: string;
 }
