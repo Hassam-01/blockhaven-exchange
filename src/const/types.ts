@@ -106,13 +106,16 @@ export interface TransactionStatusResponse {
   rateType?: "fixed" | "float";
   depositReceived?: boolean;
   depositReceivedAmount?: number;
+  depositReceivedAt?: string; // When deposit was received
   payinHash?: string;
   payoutHash?: string;
   refundHash?: string;
   kycRequired?: boolean;
   kycStatus?: "not-submitted" | "in-progress" | "rejected" | "approved";
-  created_at: string;
-  updated_at: string;
+  created_at?: string; // Keep for backward compatibility
+  updated_at?: string; // Keep for backward compatibility
+  createdAt: string; // Actual field from API
+  updatedAt?: string; // Actual field from API
   depositFee?: number;
   withdrawalFee?: number;
   transactionFee?: number;

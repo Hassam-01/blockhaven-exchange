@@ -19,6 +19,7 @@ interface TransactionTrackerProps {
   transactionId: string;
   isOpen: boolean;
   onClose: () => void;
+  createdAt?: string; // Optional creation date fallback
 }
 
 const getStatusConfig = (status: string) => {
@@ -92,7 +93,7 @@ const getStatusConfig = (status: string) => {
   }
 };
 
-export function TransactionTracker({ transactionId, isOpen, onClose }: TransactionTrackerProps) {
+export function TransactionTracker({ transactionId, isOpen, onClose, createdAt }: TransactionTrackerProps) {
   const [transaction, setTransaction] = useState<TransactionStatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -105,6 +106,7 @@ export function TransactionTracker({ transactionId, isOpen, onClose }: Transacti
     setIsLoading(true);
     try {
       const status = await getTransactionStatus(transactionId);
+      
       if (status) {
         setTransaction(status);
         setLastUpdated(new Date());
@@ -154,8 +156,24 @@ export function TransactionTracker({ transactionId, isOpen, onClose }: Transacti
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Not available';
+    try {
+      const date = new Date(dateString);
+      const dateFormatted = date.toLocaleDateString('en-GB', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+      const timeFormatted = date.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      return `${dateFormatted} at ${timeFormatted}`;
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
   const statusConfig = transaction ? getStatusConfig(transaction.status) : null;
@@ -339,12 +357,18 @@ export function TransactionTracker({ transactionId, isOpen, onClose }: Transacti
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Created:</span>
-                    <span>{formatDate(transaction.created_at)}</span>
+                    <span>{formatDate(transaction.createdAt || transaction.created_at || createdAt)}</span>
                   </div>
-                  {transaction.updated_at && (
+                  {(transaction.updatedAt || transaction.updated_at) && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Updated:</span>
-                      <span>{formatDate(transaction.updated_at)}</span>
+                      <span>{formatDate(transaction.updatedAt || transaction.updated_at)}</span>
+                    </div>
+                  )}
+                  {transaction.depositReceivedAt && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Deposit Received:</span>
+                      <span>{formatDate(transaction.depositReceivedAt)}</span>
                     </div>
                   )}
                   {lastUpdated && (

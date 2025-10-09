@@ -83,6 +83,7 @@ export function ExchangeWidget() {
   const [refundAddress, setRefundAddress] = useState("");
   const [currentTransaction, setCurrentTransaction] =
     useState<CreateTransactionResponse | null>(null);
+  const [transactionCreatedAt, setTransactionCreatedAt] = useState<string>("");
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false);
   const [showTransactionDialog, setShowTransactionDialog] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
@@ -667,7 +668,19 @@ export function ExchangeWidget() {
         });
 
         if (transaction) {
+          console.log('🆕 Transaction created - complete response:', transaction);
+          console.log('🆕 Transaction createdAt field:', transaction.createdAt);
+          console.log('🆕 Transaction keys:', Object.keys(transaction));
+          
           setCurrentTransaction(transaction);
+          const now = new Date();
+          const formattedDate = now.toLocaleDateString('en-GB', { 
+            day: 'numeric', 
+            month: 'short', 
+            year: 'numeric' 
+          });
+          console.log('📅 Formatted date being stored:', formattedDate);
+          setTransactionCreatedAt(formattedDate);
           setShowTransactionDialog(true);
           toast({
             title: "Exchange Created",
@@ -1079,7 +1092,10 @@ export function ExchangeWidget() {
               <Alert>
                 <Shield className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Order ID:</strong> {currentTransaction.id}
+                  <div className="space-y-1">
+                    <div><strong>Order ID:</strong> {currentTransaction.id}</div>
+                    <div><strong>Created:</strong> {transactionCreatedAt}</div>
+                  </div>
                 </AlertDescription>
               </Alert>
 
@@ -1143,7 +1159,10 @@ export function ExchangeWidget() {
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() => setShowTransactionDialog(false)}
+                  onClick={() => {
+                    setShowTransactionDialog(false);
+                    setTransactionCreatedAt("");
+                  }}
                 >
                   Close
                 </Button>
@@ -1154,6 +1173,7 @@ export function ExchangeWidget() {
                       setTrackingTransactionId(currentTransaction.id);
                       setShowTransactionTracker(true);
                       setShowTransactionDialog(false);
+                      setTransactionCreatedAt("");
                     }
                   }}
                 >
@@ -1170,6 +1190,7 @@ export function ExchangeWidget() {
         transactionId={trackingTransactionId}
         isOpen={showTransactionTracker}
         onClose={() => setShowTransactionTracker(false)}
+        createdAt={transactionCreatedAt}
       />
     </Card>
   );
