@@ -1061,7 +1061,6 @@ export function ExchangeWidget() {
       {/* Transaction Confirmation Dialog */}
       <Dialog
         open={showTransactionDialog}
-        onOpenChange={setShowTransactionDialog}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
