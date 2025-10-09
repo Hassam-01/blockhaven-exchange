@@ -6,6 +6,9 @@ export const API_CONFIG = {
     USERS: {
       SIGNUP: '/api/users/signup',
       LOGIN: '/api/users/login',
+      VERIFY_2FA: '/api/users/verify-2fa',
+      ENABLE_2FA: '/api/users/enable-2fa',
+      DISABLE_2FA: '/api/users/disable-2fa',
       PROFILE: '/api/users/profile',
       PASSWORD: '/api/users/password',
       FORGOT_PASSWORD: '/api/users/forgot-password',

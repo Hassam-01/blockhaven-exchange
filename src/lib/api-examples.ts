@@ -4,6 +4,9 @@ import {
   // User authentication
   userSignup,
   userLogin,
+  verify2FA,
+  enable2FA,
+  disable2FA,
   getUserProfile,
   updateUserProfile,
   updateUserPassword,
@@ -25,6 +28,8 @@ import {
   calculateServiceFee,
   calculateBaseAmount,
 } from './user-services-api';
+
+import type { User } from './user-services-api';
 
 import {
   // FAQ admin endpoints
@@ -49,7 +54,6 @@ import {
   setFloatingRate,
   setFixedRate,
   getServiceFeeHistory,
-  getServiceFeeStats,
   resetServiceFeeConfig,
   validateServiceFeeConfig,
   
@@ -79,29 +83,61 @@ export const exampleUserAuthentication = async () => {
     console.log('User registered:', signupResponse.user);
     const token = signupResponse.token;
     
-    // User Login
+    // User Login (may require 2FA)
     const loginResponse = await userLogin({
       email: 'user@example.com',
       password: 'password123',
     });
     
-    console.log('User logged in:', loginResponse.user);
+    let authToken: string;
+    let user: User;
+    
+    if (loginResponse.requiresTwoFactor && loginResponse.pendingToken) {
+      console.log('2FA required, verification code sent to email');
+      
+      // In a real application, you would get this code from user input
+      const verificationCode = '123456'; // Example code
+      
+      const verify2FAResponse = await verify2FA({
+        email: 'user@example.com',
+        code: verificationCode,
+        pendingToken: loginResponse.pendingToken,
+      });
+      
+      authToken = verify2FAResponse.data.token;
+      user = verify2FAResponse.data.user;
+      console.log('2FA verification successful:', user);
+    } else if (loginResponse.data) {
+      authToken = loginResponse.data.token;
+      user = loginResponse.data.user;
+      console.log('Direct login successful:', user);
+    } else {
+      throw new Error('Invalid login response');
+    }
     
     // Get User Profile
-    const profile = await getUserProfile(token);
+    const profile = await getUserProfile(authToken);
     console.log('User profile:', profile);
     
+    // Enable 2FA for the user
+    await enable2FA(authToken);
+    console.log('Two-factor authentication enabled');
+    
+    // Disable 2FA for the user (optional)
+    // await disable2FA(authToken);
+    // console.log('Two-factor authentication disabled');
+    
     // Update User Profile
-    const updatedProfile = await updateUserProfile(token, {
+    const updatedProfile = await updateUserProfile(authToken, {
       first_name: 'Jane',
       last_name: 'Smith',
     });
     console.log('Updated profile:', updatedProfile);
     
     // Update Password
-    await updateUserPassword(token, {
-      current_password: 'password123',
-      new_password: 'newpassword123',
+    await updateUserPassword(authToken, {
+      currentPassword: 'password123',
+      newPassword: 'newpassword123',
     });
     console.log('Password updated successfully');
     
@@ -145,7 +181,7 @@ export const exampleFAQManagement = async (userToken: string, adminToken: string
       // Get FAQ statistics
       const faqStats = await getFAQStats(adminToken);
       console.log('FAQ Stats:', faqStats);
-      console.log(`Total: ${faqStats.total}, Active: ${faqStats.active}`);
+      console.log(`Total: ${faqStats.stats.total}, Active: ${faqStats.stats.active}`);
       
       // Bulk update FAQ status
       await bulkUpdateFAQStatus(adminToken, {
@@ -259,11 +295,11 @@ export const exampleServiceFeeManagement = async (adminToken: string) => {
       }
       
       // Get service fee statistics
-      const feeStats = await getServiceFeeStats(adminToken);
-      console.log('Service Fee Stats:');
-      console.log(`Total Fees Collected: ${formatCurrency(feeStats.totalFeesCollected)}`);
-      console.log(`Average Fee: ${formatPercentage(feeStats.averageFeePercentage)}`);
-      console.log(`Total Transactions: ${feeStats.totalTransactions}`);
+      // const feeStats = await getServiceFeeStats(adminToken);
+      // console.log('Service Fee Stats:');
+      // console.log(`Total Fees Collected: ${formatCurrency(feeStats.totalFeesCollected)}`);
+      // console.log(`Average Fee: ${formatPercentage(feeStats.averageFeePercentage)}`);
+      // console.log(`Total Transactions: ${feeStats.totalTransactions}`);
       
       // Get service fee history
       const feeHistory = await getServiceFeeHistory(adminToken);
@@ -307,7 +343,21 @@ export const completeExampleWorkflow = async () => {
       email: 'admin@blockhaven.com',
       password: 'admin123',
     });
-    const adminToken = adminLoginResponse.token;
+    
+    let adminToken: string;
+    if (adminLoginResponse.requiresTwoFactor && adminLoginResponse.pendingToken) {
+      // Handle 2FA for admin (simplified for example)
+      const adminVerifyResponse = await verify2FA({
+        email: 'admin@blockhaven.com',
+        code: '123456', // Example code
+        pendingToken: adminLoginResponse.pendingToken,
+      });
+      adminToken = adminVerifyResponse.data.token;
+    } else if (adminLoginResponse.data) {
+      adminToken = adminLoginResponse.data.token;
+    } else {
+      throw new Error('Invalid admin login response');
+    }
     
     // 3. Public API Usage
     console.log('\n🌐 Public API Usage');
@@ -344,7 +394,7 @@ export const completeExampleWorkflow = async () => {
       }
       
       const stats = await getFAQStats(adminToken);
-      console.log(`FAQ Stats - Total: ${stats.total}, Active: ${stats.active}`);
+      console.log(`FAQ Stats - Total: ${stats.stats.total}, Active: ${stats.stats.active}`);
     }
     
     console.log('\n✅ Complete example workflow finished successfully!');

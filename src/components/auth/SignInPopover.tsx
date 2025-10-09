@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Eye,
   EyeOff,
-  User,
+  User as UserIcon,
   Mail,
   Lock,
   UserPlus,
@@ -27,8 +27,9 @@ import {
 } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { userSignup, userLogin } from "@/lib/user-services-api";
-import type { SignupRequest, LoginRequest } from "@/lib/user-services-api";
+import type { SignupRequest, LoginRequest, LoginResponse, User } from "@/lib/user-services-api";
 import { ForgotPasswordPopover } from "./ForgotPasswordPopover";
+import { TwoFactorVerification } from "./TwoFactorVerification";
 
 interface SignInPopoverProps {
   children: React.ReactNode;
@@ -223,7 +224,7 @@ const AuthContent = ({
             <div className="space-y-2">
               <Label htmlFor="signup-firstname">First Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="signup-firstname"
                   type="text"
@@ -370,6 +371,12 @@ export function SignInPopover({ children }: SignInPopoverProps) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
+  // 2FA state
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [pendingToken, setPendingToken] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  
   const isMobile = useIsMobile();
 
   // Login form state
@@ -457,6 +464,39 @@ export function SignInPopover({ children }: SignInPopoverProps) {
     setShowForgotPassword(false);
   };
 
+  const handleTwoFactorSuccess = (token: string, user: User) => {
+    // Store token and user data
+    localStorage.setItem("auth_token", token);
+    localStorage.setItem("user_data", JSON.stringify(user));
+    
+    // Clear 2FA state first
+    setPendingToken("");
+    setUserEmail("");
+    
+    // Close all dialogs
+    setShowTwoFactor(false);
+    setIsOpen(false);
+    resetForms();
+    
+    // Trigger auth state change event with a small delay to ensure localStorage is updated
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("auth-state-changed"));
+      // Also dispatch a storage event to trigger the Header's storage listener
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'auth_token',
+        newValue: token,
+        url: window.location.href
+      }));
+    }, 100);
+  };
+
+  const handleTwoFactorClose = () => {
+    setShowTwoFactor(false);
+    setPendingToken("");
+    setUserEmail("");
+    setIsOpen(true); // Return to login
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -464,19 +504,33 @@ export function SignInPopover({ children }: SignInPopoverProps) {
 
     try {
       const response = await userLogin(loginData);
-      setSuccess("Login successful!");
-
-      // Store token in localStorage (you might want to use a more secure method)
-      localStorage.setItem("auth_token", response.token);
-      localStorage.setItem("user_data", JSON.stringify(response.user));
-
-      // Close popover after successful login
-      setTimeout(() => {
+      
+      // Check if 2FA is required
+      if (response.requiresTwoFactor && response.pendingToken) {
+        // Close the login popover and show 2FA verification
         setIsOpen(false);
-        resetForms();
-        // Trigger a custom event to update the header state
-        window.dispatchEvent(new CustomEvent("auth-state-changed"));
-      }, 1000);
+        setPendingToken(response.pendingToken);
+        setUserEmail(loginData.email);
+        setShowTwoFactor(true);
+        setSuccess("Please check your email for the verification code.");
+      } else if (response.data) {
+        // Regular login without 2FA
+        setSuccess("Login successful!");
+
+        // Store token in localStorage
+        localStorage.setItem("auth_token", response.data.token);
+        localStorage.setItem("user_data", JSON.stringify(response.data.user));
+
+        // Close popover after successful login
+        setTimeout(() => {
+          setIsOpen(false);
+          resetForms();
+          // Trigger a custom event to update the header state
+          window.dispatchEvent(new CustomEvent("auth-state-changed"));
+        }, 1000);
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (err) {
       // Provide more user-friendly error messages
       let errorMessage = "Login failed. Please try again.";
@@ -657,6 +711,13 @@ export function SignInPopover({ children }: SignInPopoverProps) {
         isOpen={showForgotPassword}
         onClose={handleCloseForgotPassword}
         onBackToLogin={handleBackToLogin}
+      />
+      <TwoFactorVerification
+        isOpen={showTwoFactor}
+        onClose={handleTwoFactorClose}
+        email={userEmail}
+        pendingToken={pendingToken}
+        onVerificationSuccess={handleTwoFactorSuccess}
       />
     </>
   );

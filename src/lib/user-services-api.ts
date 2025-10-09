@@ -9,6 +9,7 @@ export interface User {
   first_name: string;
   last_name: string;
   user_type: "customer" | "admin";
+  two_factor_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,23 @@ export interface SignupRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    token: string;
+    user: User;
+  };
+  requiresTwoFactor?: boolean;
+  pendingToken?: string;
+}
+
+export interface Verify2FARequest {
+  email: string;
+  code: string;
+  pendingToken: string;
 }
 
 export interface AuthResponse {
@@ -266,12 +284,50 @@ export const userSignup = async (
 
 export const userLogin = async (
   data: LoginRequest
-): Promise<{ token: string; user: User }> => {
-  return apiCall<{ token: string; user: User }>(
+): Promise<LoginResponse> => {
+  return apiCall<LoginResponse>(
     API_CONFIG.ENDPOINTS.USERS.LOGIN,
     {
       method: HTTP_METHODS.POST,
       body: JSON.stringify(data),
+    }
+  );
+};
+
+export const verify2FA = async (
+  data: Verify2FARequest
+): Promise<AuthResponse> => {
+  return apiCall<AuthResponse>(
+    API_CONFIG.ENDPOINTS.USERS.VERIFY_2FA,
+    {
+      method: HTTP_METHODS.POST,
+      body: JSON.stringify(data),
+    }
+  );
+};
+
+export const enable2FA = async (
+  token: string
+): Promise<{ success: boolean; message: string }> => {
+  return apiCall<{ success: boolean; message: string }>(
+    API_CONFIG.ENDPOINTS.USERS.ENABLE_2FA,
+    {
+      method: HTTP_METHODS.PUT,
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({}),
+    }
+  );
+};
+
+export const disable2FA = async (
+  token: string
+): Promise<{ success: boolean; message: string }> => {
+  return apiCall<{ success: boolean; message: string }>(
+    API_CONFIG.ENDPOINTS.USERS.DISABLE_2FA,
+    {
+      method: HTTP_METHODS.PUT,
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({}),
     }
   );
 };

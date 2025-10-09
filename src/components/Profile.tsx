@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Eye, EyeOff, Lock, User, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserPassword, type UpdatePasswordRequest } from '@/lib/user-services-api';
 import { getCurrentAuthToken } from '@/lib/user-services-api';
+import { TwoFactorSettings } from '@/components/auth/TwoFactorSettings';
 
 interface ProfileProps {
   onClose: () => void;
@@ -97,11 +99,21 @@ export function Profile({ onClose }: ProfileProps) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background border border-border rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto mx-4">
-        <Card className="border-none shadow-none">
-          <CardHeader className="border-b border-border">
+  return createPortal(
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-background border border-border rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-[10000] my-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Card className="border-none shadow-none h-full">
+          <CardHeader className="border-b border-border sticky top-0 bg-background z-10">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-bold flex items-center gap-2">
                 <User className="w-5 h-5" />
@@ -119,13 +131,18 @@ export function Profile({ onClose }: ProfileProps) {
           </CardHeader>
           
           <CardContent className="p-6">
-            <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">Change Password</h3>
-                <p className="text-sm text-muted-foreground">
-                  Update your account password for security
-                </p>
-              </div>
+            <div className="space-y-8">
+              {/* Two-Factor Authentication Section */}
+              <TwoFactorSettings />
+              
+              {/* Password Change Section */}
+              <div className="border-t pt-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Change Password</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Update your account password for security
+                  </p>
+                </div>
 
               {error && (
                 <Alert variant="destructive">
@@ -268,10 +285,12 @@ export function Profile({ onClose }: ProfileProps) {
                   </Button>
                 </div>
               </form>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
