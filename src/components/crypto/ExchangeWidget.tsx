@@ -128,6 +128,11 @@ export function ExchangeWidget() {
   const filteredCurrencies = useMemo(() => {
     return allCurrencies
       .filter((c) => !c.isFiat) // Only exclude fiat currencies
+      .filter((c) => 
+        c.network !== null && 
+        c.network !== undefined && 
+        c.network.trim() !== ''
+      ) // Exclude currencies with null/undefined network
       .sort((a, b) => {
         // Sort by featured first, then alphabetically
         if (a.featured && !b.featured) return -1;
@@ -403,6 +408,8 @@ export function ExchangeWidget() {
             [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
             flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
             type: calculationType,
+            fromNetwork: selectedFromCurrency?.network || undefined,
+            toNetwork: selectedToCurrency?.network || undefined,
           }
           );
 
@@ -463,6 +470,8 @@ export function ExchangeWidget() {
     selectedFiatCurrency,
     performFiatEstimate,
     toast,
+    selectedFromCurrency?.network,
+    selectedToCurrency?.network,
   ]);
 
   const handleSwapCurrencies = useCallback(() => {

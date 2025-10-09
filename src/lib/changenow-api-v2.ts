@@ -7,7 +7,7 @@ export interface ExchangeCurrency {
   featured: boolean;
   isStable: boolean;
   supportsFixedRate: boolean;
-  network: string;
+  network: string | null;
   tokenContract: string | null;
   buy: boolean;
   sell: boolean;
@@ -24,6 +24,41 @@ import { getCurrentAuthToken } from "@/lib/user-services-api";
 
 const CHANGENOW_API_BASE = 'https://api.changenow.io/v2';
 const CHANGENOW_API_KEY = import.meta.env.VITE_CHANGENOW_API_KEY;
+
+// Track shown error toasts to prevent spam
+let lastShownError: {
+    fromCurrency?: string;
+    toCurrency?: string;
+    error?: string;
+    timestamp?: number;
+} = {};
+
+// Helper function to check if we should show error toast
+function shouldShowErrorToast(fromCurrency?: string, toCurrency?: string, error?: string): boolean {
+    const currentPair = `${fromCurrency}-${toCurrency}`;
+    const lastPair = `${lastShownError.fromCurrency}-${lastShownError.toCurrency}`;
+    const now = Date.now();
+    
+    // Show toast if:
+    // 1. Currency pair has changed, OR
+    // 2. Error type has changed, OR  
+    // 3. More than 30 seconds have passed since last toast
+    if (currentPair !== lastPair || 
+        lastShownError.error !== error || 
+        !lastShownError.timestamp || 
+        (now - lastShownError.timestamp) > 30000) {
+        
+        lastShownError = {
+            fromCurrency,
+            toCurrency, 
+            error,
+            timestamp: now
+        };
+        return true;
+    }
+    
+    return false;
+}
 
 // Validate API key
 if (!CHANGENOW_API_KEY) {
@@ -107,8 +142,16 @@ export async function getAvailableCurrencies(
         if (!response.ok) throw new Error('Failed to fetch currencies');
 
         const currencies = await response.json();
+        
+        // Filter out currencies with null or undefined network values first
+        const validCurrencies = currencies.filter((currency: ExchangeCurrency) => 
+            currency.network !== null && 
+            currency.network !== undefined && 
+            currency.network.trim() !== ''
+        );
+        
         // Deduplicate currencies by ticker and add color/logo properties
-        const uniqueCurrencies = currencies.reduce((acc: ExchangeCurrency[], currency: ExchangeCurrency) => {
+        const uniqueCurrencies = validCurrencies.reduce((acc: ExchangeCurrency[], currency: ExchangeCurrency) => {
             const existingIndex = acc.findIndex(c => c.ticker === currency.ticker);
             if (existingIndex === -1) {
                 // Add new currency with color and logo
@@ -187,7 +230,22 @@ export async function getAvailablePairs(
             }
         );
 
-        if (!response.ok) throw new Error('Failed to fetch available pairs');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            const error = errorData?.error;
+            
+            if (error === 'pair_is_inactive' && shouldShowErrorToast(fromCurrency, toCurrency, error)) {
+                const errorMessage = 'This currency pair is currently inactive or not supported. Please select a different pair.';
+                toast({
+                    variant: "destructive",
+                    title: "Invalid Currency Pair",
+                    description: errorMessage
+                });
+                throw new Error(errorMessage);
+            }
+            
+            throw new Error('Failed to fetch available pairs');
+        }
         return await response.json();
     } catch (error) {
         console.error('Error fetching available pairs:', error);
@@ -224,7 +282,22 @@ export async function getMinimalExchangeAmount(
             }
         );
 
-        if (!response.ok) throw new Error('Failed to fetch minimal exchange amount');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            const error = errorData?.error;
+            
+            if (error === 'pair_is_inactive' && shouldShowErrorToast(fromCurrency, toCurrency, error)) {
+                const errorMessage = 'This currency pair is currently inactive or not supported. Please select a different pair.';
+                toast({
+                    variant: "destructive",
+                    title: "Invalid Currency Pair",
+                    description: errorMessage
+                });
+                throw new Error(errorMessage);
+            }
+            
+            throw new Error('Failed to fetch minimal exchange amount');
+        }
         return await response.json();
     } catch (error) {
         console.error('Error fetching minimal exchange amount:', error);
@@ -277,6 +350,27 @@ export async function getEstimatedExchangeAmount(
 
     if (!res.ok) {
         const message = data?.message ?? 'Failed to fetch estimated amount';
+        const error = data?.error;
+        
+        // Handle specific error cases
+        if (error === 'pair_is_inactive' && shouldShowErrorToast(fromCurrency, toCurrency, error)) {
+            const errorMessage = 'This currency pair is currently inactive or not supported. Please select a different pair.';
+            toast({
+                variant: "destructive",
+                title: "Invalid Currency Pair",
+                description: errorMessage
+            });
+            throw new Error(errorMessage);
+        }
+        
+        // Handle other errors - but also check if we should show toast for general errors
+        if (shouldShowErrorToast(fromCurrency, toCurrency, error || 'general_error')) {
+            toast({
+                variant: "destructive",
+                title: "Estimation Error",
+                description: message
+            });
+        }
         throw new Error(message);
     }
 

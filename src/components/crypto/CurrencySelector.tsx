@@ -38,12 +38,22 @@ export default function CurrencySelector({
   const setOpen = externalOnOpenChange || setInternalOpen;
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return currencies;
+    if (!search.trim()) {
+      // Filter out currencies with null/undefined network
+      return currencies.filter(c => 
+        c.network !== null && 
+        c.network !== undefined && 
+        c.network.trim() !== ''
+      );
+    }
     const q = search.toLowerCase();
     return currencies.filter(
       c =>
-        c.name.toLowerCase().includes(q) ||
-        c.ticker.toLowerCase().includes(q)
+        c.network !== null && 
+        c.network !== undefined && 
+        c.network.trim() !== '' &&
+        (c.name.toLowerCase().includes(q) ||
+        c.ticker.toLowerCase().includes(q))
     );
   }, [currencies, search]);
 
@@ -128,6 +138,26 @@ export default function CurrencySelector({
               <CommandItem
                 key={c.ticker}
                 onSelect={() => {
+                  console.log("=== Selected Coin Details ===");
+                  console.log("Ticker:", c.ticker);
+                  console.log("Name:", c.name);
+                  console.log("Network:", c.network);
+                  console.log("Image:", c.image);
+                  console.log("Logo:", c.logo);
+                  console.log("Featured:", c.featured);
+                  console.log("Is Stable:", c.isStable);
+                  console.log("Is Fiat:", c.isFiat);
+                  console.log("Has External ID:", c.hasExternalId);
+                  console.log("Supports Fixed Rate:", c.supportsFixedRate);
+                  console.log("Token Contract:", c.tokenContract);
+                  console.log("Buy:", c.buy);
+                  console.log("Sell:", c.sell);
+                  console.log("Legacy Ticker:", c.legacyTicker);
+                  console.log("Is Extra ID Supported:", c.isExtraIdSupported);
+                  console.log("Color:", c.color);
+                  console.log("Full Object:", c);
+                  console.log("============================");
+                  
                   onValueChange(c.ticker);
                   setOpen(false);
                   setSearch("");
