@@ -63,6 +63,7 @@ import CurrencySelector from "./CurrencySelector";
 import { TransactionTracker } from "./TransactionTracker";
 import { TermsPopover } from "@/components/legal/TermsPopover";
 import { PrivacyPopover } from "@/components/legal/PrivacyPopover";
+import { QRCodeComponent } from "@/components/ui/qr-code";
 import { CreateTransactionResponse, CryptoCurrencyForFiat, ExchangeCurrency, FiatCurrency } from "@/const/types";
 
 export function ExchangeWidget() {
@@ -1084,7 +1085,7 @@ export function ExchangeWidget() {
       <Dialog
         open={showTransactionDialog}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-primary" />
@@ -1113,10 +1114,12 @@ export function ExchangeWidget() {
                   <label className="text-sm font-medium text-foreground">
                     Send {fromAmount} {fromCurrency.toUpperCase()} to:
                   </label>
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                    <code className="flex-1 text-sm font-mono break-all">
-                      {currentTransaction.payinAddress}
-                    </code>
+                  <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                    <div className="flex-1">
+                      <code className="text-sm font-mono break-all">
+                        {currentTransaction.payinAddress}
+                      </code>
+                    </div>
                     <Button
                       size="sm"
                       variant="outline"
@@ -1130,6 +1133,16 @@ export function ExchangeWidget() {
                         <Copy className="w-4 h-4" />
                       )}
                     </Button>
+                    <div className="ml-2">
+                      <QRCodeComponent 
+                        value={currentTransaction.payinAddress}
+                        size={80}
+                        title=""
+                        showCopy={false}
+                        showDownload={false}
+                        className=""
+                      />
+                    </div>
                   </div>
                 </div>
 
