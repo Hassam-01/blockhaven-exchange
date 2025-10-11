@@ -64,12 +64,15 @@ import { TransactionTracker } from "./TransactionTracker";
 import { TermsPopover } from "@/components/legal/TermsPopover";
 import { PrivacyPopover } from "@/components/legal/PrivacyPopover";
 import { QRCodeComponent } from "@/components/ui/qr-code";
-import { CreateTransactionResponse, CryptoCurrencyForFiat, ExchangeCurrency, FiatCurrency } from "@/const/types";
+import {
+  CreateTransactionResponse,
+  CryptoCurrencyForFiat,
+  ExchangeCurrency,
+  FiatCurrency,
+} from "@/const/types";
 
 export function ExchangeWidget() {
-  const [activeTab, setActiveTab] = useState<"exchange">(
-    "exchange"
-  );
+  const [activeTab, setActiveTab] = useState<"exchange">("exchange");
   const [fromCurrency, setFromCurrency] = useState("btc");
   const [toCurrency, setToCurrency] = useState("eth");
   const [fromAmount, setFromAmount] = useState("");
@@ -107,32 +110,36 @@ export function ExchangeWidget() {
   const [showRateTimer, setShowRateTimer] = useState(false);
   const [serviceFeeConfig, setServiceFeeConfig] =
     useState<EnhancedServiceFeeConfig | null>(null);
-  
+
   // Fiat-specific state variables
   const [fiatCurrencies, setFiatCurrencies] = useState<FiatCurrency[]>([]);
-  const [cryptoForFiat, setCryptoForFiat] = useState<CryptoCurrencyForFiat[]>([]);
+  const [cryptoForFiat, setCryptoForFiat] = useState<CryptoCurrencyForFiat[]>(
+    []
+  );
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [selectedFiatCurrency, setSelectedFiatCurrency] = useState("USD");
-  
+
   // Transaction tracking state
   const [showTransactionTracker, setShowTransactionTracker] = useState(false);
-  const [trackingTransactionId, setTrackingTransactionId] = useState<string>("");
-  
+  const [trackingTransactionId, setTrackingTransactionId] =
+    useState<string>("");
+
   // Currency selector popover states
   const [fromCurrencyPopoverOpen, setFromCurrencyPopoverOpen] = useState(false);
   const [toCurrencyPopoverOpen, setToCurrencyPopoverOpen] = useState(false);
-  
+
   const { toast } = useToast();
 
   // Memoize filtered currencies for better performance - now shows ALL available currencies
   const filteredCurrencies = useMemo(() => {
     return allCurrencies
       .filter((c) => !c.isFiat) // Only exclude fiat currencies
-      .filter((c) => 
-        c.network !== null && 
-        c.network !== undefined && 
-        c.network.trim() !== ''
+      .filter(
+        (c) =>
+          c.network !== null &&
+          c.network !== undefined &&
+          c.network.trim() !== ""
       ) // Exclude currencies with null/undefined network
       .sort((a, b) => {
         // Sort by featured first, then alphabetically
@@ -190,14 +197,14 @@ export function ExchangeWidget() {
 
     const updateTimer = () => {
       const timeData = getTimeRemaining(validUntil);
-      
+
       if (timeData.isExpired) {
         setTimeRemaining("Rate expired");
         setShowRateTimer(false);
         setRateId(null);
         setValidUntil(null);
         clearFixedRateData();
-        
+
         toast({
           title: "Rate Expired",
           description: "The fixed rate has expired. Please get a new estimate.",
@@ -205,16 +212,16 @@ export function ExchangeWidget() {
         });
         return;
       }
-      
+
       setTimeRemaining(timeData.formatted);
     };
 
     // Update immediately
     updateTimer();
-    
+
     // Set up interval to update every second
     const interval = setInterval(updateTimer, 1000);
-    
+
     return () => clearInterval(interval);
   }, [validUntil, showRateTimer, toast]);
 
@@ -265,7 +272,7 @@ export function ExchangeWidget() {
       try {
         const [fiatCurrs, cryptoCurrs] = await Promise.all([
           getFiatCurrencies(),
-          getCryptoCurrenciesForFiat()
+          getCryptoCurrenciesForFiat(),
         ]);
 
         if (fiatCurrs) {
@@ -295,21 +302,6 @@ export function ExchangeWidget() {
     const currency = allCurrencies.find((c) => c.ticker === toCurrency);
     setSelectedToCurrency(currency || null);
     setLeftColor(currency?.color || "");
-    
-    // Log detailed currency information
-    console.log('To currency details updated:', {
-      ticker: toCurrency,
-      currencyDetails: currency ? {
-        name: currency.name,
-        ticker: currency.ticker,
-        image: currency.image,
-        hasExternalId: currency.hasExternalId,
-        isFiat: currency.isFiat,
-        color: currency.color,
-        network: currency.network
-      } : 'Currency not found in available currencies',
-      availableCurrenciesCount: allCurrencies.length
-    });
   }, [toCurrency, allCurrencies]);
 
   // Close currency selector popovers when page scrolls
@@ -324,11 +316,11 @@ export function ExchangeWidget() {
     };
 
     // Add scroll event listener to window
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
     // Cleanup
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [fromCurrencyPopoverOpen, toCurrencyPopoverOpen]);
 
@@ -336,8 +328,11 @@ export function ExchangeWidget() {
   useEffect(() => {
     if (exchangeType === "fixed" && fromAmount && toAmount) {
       const storedData = getFixedRateData();
-      
-      if (storedData && isRateDataValid(fromCurrency, toCurrency, fromAmount, toAmount)) {
+
+      if (
+        storedData &&
+        isRateDataValid(fromCurrency, toCurrency, fromAmount, toAmount)
+      ) {
         setRateId(storedData.rateId);
         setValidUntil(storedData.validUntil);
         setShowRateTimer(true);
@@ -346,26 +341,29 @@ export function ExchangeWidget() {
   }, [exchangeType, fromCurrency, toCurrency, fromAmount, toAmount]);
 
   // Fiat estimation function
-  const performFiatEstimate = useCallback(async (
-    fiatCurrency: string,
-    cryptoCurrency: string,
-    amount: number,
-    isBuy: boolean
-  ) => {
-    try {
-      const estimate = await getFiatEstimate({
-        from_currency: isBuy ? fiatCurrency : cryptoCurrency,
-        to_currency: isBuy ? cryptoCurrency : fiatCurrency,
-        from_amount: amount,
-        deposit_type: "SEPA_1", // Default deposit type
-        payout_type: isBuy ? "CRYPTO_THROUGH_CN" : "SEPA_1"
-      });
+  const performFiatEstimate = useCallback(
+    async (
+      fiatCurrency: string,
+      cryptoCurrency: string,
+      amount: number,
+      isBuy: boolean
+    ) => {
+      try {
+        const estimate = await getFiatEstimate({
+          from_currency: isBuy ? fiatCurrency : cryptoCurrency,
+          to_currency: isBuy ? cryptoCurrency : fiatCurrency,
+          from_amount: amount,
+          deposit_type: "SEPA_1", // Default deposit type
+          payout_type: isBuy ? "CRYPTO_THROUGH_CN" : "SEPA_1",
+        });
 
-      return estimate;
-    } catch (error) {
-      return null;
-    }
-  }, []);
+        return estimate;
+      } catch (error) {
+        return null;
+      }
+    },
+    []
+  );
 
   // Minimum and Maximum amounts
   useEffect(() => {
@@ -377,12 +375,18 @@ export function ExchangeWidget() {
           // });
           const range = await getExchangeRange(fromCurrency, toCurrency, {
             flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
+            fromNetwork: selectedFromCurrency?.network || undefined,
+            toNetwork: selectedToCurrency?.network || undefined,
           });
           if (range) {
             setMinAmount(range.minAmount.toString());
+          } else {
+            setMinAmount("");
           }
           if (range.maxAmount) {
             setMaxAmount(range.maxAmount.toString());
+          } else {
+            setMaxAmount("");
           }
         } catch (error) {
           // Error fetching amount limits - will use defaults
@@ -391,7 +395,13 @@ export function ExchangeWidget() {
     };
 
     fetchAmountLimits();
-  }, [fromCurrency, toCurrency, exchangeType]);
+  }, [
+    fromCurrency,
+    toCurrency,
+    exchangeType,
+    selectedFromCurrency?.network,
+    selectedToCurrency?.network,
+  ]);
 
   // Estimate amounts based on calculation type
   useEffect(() => {
@@ -412,6 +422,40 @@ export function ExchangeWidget() {
         return;
       }
 
+      // Check if amount is within min/max limits before making API call
+      const currentAmount = calculationType === "direct" ? amount : parseFloat(fromAmount);
+      const minAmountNum = parseFloat(minAmount);
+      const maxAmountNum = parseFloat(maxAmount);
+
+      // Only validate if we have min/max amounts and we're checking the "from" amount
+      if (minAmount && currentAmount < minAmountNum) {
+        if (calculationType === "direct") {
+          setToAmount("");
+        } else {
+          setFromAmount("");
+        }
+        toast({
+          title: "Amount Too Small",
+          description: `Minimum amount is ${minAmount} ${fromCurrency.toUpperCase()}`,
+          variant: "destructive",
+        });
+        return; // Don't make API call if below minimum
+      }
+
+      if (maxAmount && currentAmount > maxAmountNum) {
+        if (calculationType === "direct") {
+          setToAmount("");
+        } else {
+          setFromAmount("");
+        }
+        toast({
+          title: "Amount Exceeded",
+          description: `Maximum amount is ${maxAmount} ${fromCurrency.toUpperCase()}`,
+          variant: "destructive",
+        });
+        return; // Don't make API call if above maximum
+      }
+
       setIsLoading(true);
       try {
         // Regular crypto-to-crypto exchange
@@ -425,37 +469,43 @@ export function ExchangeWidget() {
             fromNetwork: selectedFromCurrency?.network || undefined,
             toNetwork: selectedToCurrency?.network || undefined,
           }
-          );
+        );
 
-          // Store rateId and validUntil for fixed-rate exchanges
-          if (exchangeType === "fixed" && result.rateId) {
-            setRateId(result.rateId);
-            setValidUntil(result.validUntil || null);
-            setShowRateTimer(true);
-            
-            // Store in localStorage
-            if (result.validUntil) {
-              storeFixedRateData({
-                rateId: result.rateId,
-                validUntil: result.validUntil,
-                fromCurrency,
-                toCurrency,
-                fromAmount: calculationType === "direct" ? amount.toString() : result.fromAmount?.toString() || "",
-                toAmount: calculationType === "reverse" ? amount.toString() : result.toAmount?.toString() || "",
-              });
-            }
-          } else {
-            setRateId(null);
-            setValidUntil(null);
-            setShowRateTimer(false);
-            clearFixedRateData();
-          }
+        // Store rateId and validUntil for fixed-rate exchanges
+        if (exchangeType === "fixed" && result.rateId) {
+          setRateId(result.rateId);
+          setValidUntil(result.validUntil || null);
+          setShowRateTimer(true);
 
-          if (calculationType === "direct") {
-            setToAmount(result.toAmount?.toString() ?? "");
-          } else {
-            setFromAmount(result.fromAmount?.toString() ?? "");
+          // Store in localStorage
+          if (result.validUntil) {
+            storeFixedRateData({
+              rateId: result.rateId,
+              validUntil: result.validUntil,
+              fromCurrency,
+              toCurrency,
+              fromAmount:
+                calculationType === "direct"
+                  ? amount.toString()
+                  : result.fromAmount?.toString() || "",
+              toAmount:
+                calculationType === "reverse"
+                  ? amount.toString()
+                  : result.toAmount?.toString() || "",
+            });
           }
+        } else {
+          setRateId(null);
+          setValidUntil(null);
+          setShowRateTimer(false);
+          clearFixedRateData();
+        }
+
+        if (calculationType === "direct") {
+          setToAmount(result.toAmount?.toString() ?? "");
+        } else {
+          setFromAmount(result.fromAmount?.toString() ?? "");
+        }
       } catch (err) {
         toast({
           title: "Error Estimating",
@@ -471,7 +521,12 @@ export function ExchangeWidget() {
       }
     };
 
-    performEstimate();
+    // Add debounce delay to prevent validation errors while user is still typing
+    const timeoutId = setTimeout(() => {
+      performEstimate();
+    }, 800); // 800ms delay
+
+    return () => clearTimeout(timeoutId);
   }, [
     fromCurrency,
     toCurrency,
@@ -485,6 +540,8 @@ export function ExchangeWidget() {
     toast,
     selectedFromCurrency?.network,
     selectedToCurrency?.network,
+    minAmount,
+    maxAmount,
   ]);
 
   const handleSwapCurrencies = useCallback(() => {
@@ -501,29 +558,32 @@ export function ExchangeWidget() {
 
   const handleFromCurrencyChange = useCallback(
     (value: string) => {
-      
       if (toCurrency === value) {
-        console.log('Currency conflict detected, swapping to currency:', toCurrency, '→', fromCurrency);
+        console.log(
+          "Currency conflict detected, swapping to currency:",
+          toCurrency,
+          "→",
+          fromCurrency
+        );
         setToCurrency(fromCurrency);
       }
       setFromCurrency(value);
+      // Clear amounts when currency changes
+      setFromAmount("");
+      setToAmount("");
     },
     [fromCurrency, toCurrency]
   );
 
   const handleToCurrencyChange = useCallback(
     (value: string) => {
-      console.log('To currency changed:', {
-        previousCurrency: toCurrency,
-        newCurrency: value,
-        changeType: 'TO_CURRENCY_SELECTION'
-      });
-      
       if (fromCurrency === value) {
-        console.log('Currency conflict detected, swapping from currency:', fromCurrency, '→', toCurrency);
         setFromCurrency(toCurrency);
       }
       setToCurrency(value);
+      // Clear amounts when currency changes
+      setFromAmount("");
+      setToAmount("");
     },
     [fromCurrency, toCurrency]
   );
@@ -627,12 +687,16 @@ export function ExchangeWidget() {
           });
 
           try {
-            const amount = calculationType === "direct" ? parseFloat(fromAmount) : parseFloat(toAmount);
+            const amount =
+              calculationType === "direct"
+                ? parseFloat(fromAmount)
+                : parseFloat(toAmount);
             const newRateResult = await getEstimatedExchangeAmount(
               fromCurrency,
               toCurrency,
               {
-                [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
+                [calculationType === "direct" ? "fromAmount" : "toAmount"]:
+                  amount,
                 flow: "fixed-rate",
                 type: calculationType,
               }
@@ -650,20 +714,30 @@ export function ExchangeWidget() {
                 validUntil: newRateResult.validUntil,
                 fromCurrency,
                 toCurrency,
-                fromAmount: calculationType === "direct" ? amount.toString() : newRateResult.fromAmount?.toString() || "",
-                toAmount: calculationType === "reverse" ? amount.toString() : newRateResult.toAmount?.toString() || "",
+                fromAmount:
+                  calculationType === "direct"
+                    ? amount.toString()
+                    : newRateResult.fromAmount?.toString() || "",
+                toAmount:
+                  calculationType === "reverse"
+                    ? amount.toString()
+                    : newRateResult.toAmount?.toString() || "",
               });
 
               // Update amounts if they changed with the new rate
               if (calculationType === "direct" && newRateResult.toAmount) {
                 setToAmount(newRateResult.toAmount.toString());
-              } else if (calculationType === "reverse" && newRateResult.fromAmount) {
+              } else if (
+                calculationType === "reverse" &&
+                newRateResult.fromAmount
+              ) {
                 setFromAmount(newRateResult.fromAmount.toString());
               }
 
               toast({
                 title: "New Rate Obtained",
-                description: "Fixed rate has been refreshed and locked for 15 minutes.",
+                description:
+                  "Fixed rate has been refreshed and locked for 15 minutes.",
               });
             } else {
               throw new Error("Failed to get new fixed rate");
@@ -672,7 +746,8 @@ export function ExchangeWidget() {
             console.error("Error getting new fixed rate:", error);
             toast({
               title: "Rate Refresh Failed",
-              description: "Could not get a new fixed rate. Please try again or use floating rate.",
+              description:
+                "Could not get a new fixed rate. Please try again or use floating rate.",
               variant: "destructive",
             });
             return;
@@ -695,38 +770,32 @@ export function ExchangeWidget() {
           flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
           type: calculationType,
           // Include rateId for fixed-rate to freeze the estimated rate
-          ...(exchangeType === "fixed" && currentRateId && { rateId: currentRateId }),
+          ...(exchangeType === "fixed" &&
+            currentRateId && { rateId: currentRateId }),
         });
 
         if (transaction) {
-          console.log('🆕 Transaction created - complete response:', transaction);
-          console.log('🆕 Transaction createdAt field:', transaction.createdAt);
-          console.log('🆕 Transaction keys:', Object.keys(transaction));
-          
           setCurrentTransaction(transaction);
           const now = new Date();
-          const formattedDate = now.toLocaleDateString('en-GB', { 
-            day: 'numeric', 
-            month: 'short', 
-            year: 'numeric' 
+          const formattedDate = now.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
           });
-          console.log('📅 Formatted date being stored:', formattedDate);
           setTransactionCreatedAt(formattedDate);
           setShowTransactionDialog(true);
           toast({
             title: "Exchange Created",
-            description:
-              "Your exchange order has been created successfully.",
+            description: "Your exchange order has been created successfully.",
           });
         } else {
           // throw new Error("Failed to create transaction");
         }
       } catch (error) {
-        console.error("Transaction creation error:",  );
+        console.error("Transaction creation error:");
         toast({
           title: "Order Failed",
-          description:
-            "Failed to create exchange order. Please try again.",
+          description: "Failed to create exchange order. Please try again.",
           variant: "destructive",
         });
       } finally {
@@ -737,7 +806,8 @@ export function ExchangeWidget() {
       if (!customerEmail.trim()) {
         toast({
           title: "Missing Email",
-          description: "Please provide your email address for fiat transactions.",
+          description:
+            "Please provide your email address for fiat transactions.",
           variant: "destructive",
         });
         return;
@@ -746,10 +816,11 @@ export function ExchangeWidget() {
       // Validate wallet address for crypto payout (buy) or crypto input (sell)
       const cryptoAddress = type === "buy" ? depositAddress : depositAddress;
       const cryptoCurrency = type === "buy" ? toCurrency : fromCurrency;
-      const cryptoNetwork = type === "buy" 
-        ? (selectedToCurrency?.network || toCurrency)
-        : (selectedFromCurrency?.network || fromCurrency);
-      
+      const cryptoNetwork =
+        type === "buy"
+          ? selectedToCurrency?.network || toCurrency
+          : selectedFromCurrency?.network || fromCurrency;
+
       if (!cryptoAddress.trim()) {
         toast({
           title: "Missing Wallet Address",
@@ -761,7 +832,10 @@ export function ExchangeWidget() {
 
       // Validate the crypto wallet address
       try {
-        const addressValidation = await validateAddress(cryptoNetwork, cryptoAddress);
+        const addressValidation = await validateAddress(
+          cryptoNetwork,
+          cryptoAddress
+        );
         if (!addressValidation?.result) {
           toast({
             title: "Invalid Wallet Address",
@@ -786,8 +860,10 @@ export function ExchangeWidget() {
           from_amount: parseFloat(fromAmount),
           from_currency: type === "buy" ? selectedFiatCurrency : fromCurrency,
           to_currency: type === "buy" ? toCurrency : selectedFiatCurrency,
-          from_network: type === "buy" ? null : selectedFromCurrency?.network || null,
-          to_network: type === "buy" ? selectedToCurrency?.network || toCurrency : null,
+          from_network:
+            type === "buy" ? null : selectedFromCurrency?.network || null,
+          to_network:
+            type === "buy" ? selectedToCurrency?.network || toCurrency : null,
           payout_address: cryptoAddress,
           deposit_type: "SEPA_1", // Default deposit type
           payout_type: type === "buy" ? "CRYPTO_THROUGH_CN" : "SEPA_1",
@@ -809,7 +885,7 @@ export function ExchangeWidget() {
 
           // If there's a redirect URL, you might want to open it
           if (fiatTransaction.redirect_url) {
-            window.open(fiatTransaction.redirect_url, '_blank');
+            window.open(fiatTransaction.redirect_url, "_blank");
           }
         } else {
           throw new Error("Failed to create fiat transaction");
@@ -1038,43 +1114,54 @@ export function ExchangeWidget() {
                   </span>
                 </span>
               </span>
-              
+
               {/* Fixed Rate Timer */}
               {showRateTimer && exchangeType === "fixed" && timeRemaining && (
                 <div className="flex items-center gap-2 mb-3">
-                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${
-                    timeRemaining.includes('expired') 
-                      ? 'bg-red-100 dark:bg-red-900/20' 
-                      : timeRemaining.startsWith('0:') && !timeRemaining.startsWith('0:0')
-                        ? 'bg-orange-100 dark:bg-orange-900/20'
-                        : timeRemaining.startsWith('0:0')
-                          ? 'bg-red-100 dark:bg-red-900/20'
-                          : 'bg-green-100 dark:bg-green-900/20'
-                  }`}>
-                    <Zap className={`h-3 w-3 ${
-                      timeRemaining.includes('expired')
-                        ? 'text-red-600 dark:text-red-400'
-                        : timeRemaining.startsWith('0:') && !timeRemaining.startsWith('0:0')
-                          ? 'text-orange-600 dark:text-orange-400'
-                          : timeRemaining.startsWith('0:0')
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-green-600 dark:text-green-400'
-                    }`} />
-                    <span className={`text-xs font-medium ${
-                      timeRemaining.includes('expired')
-                        ? 'text-red-600 dark:text-red-400'
-                        : timeRemaining.startsWith('0:') && !timeRemaining.startsWith('0:0')
-                          ? 'text-orange-600 dark:text-orange-400'
-                          : timeRemaining.startsWith('0:0')
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-green-600 dark:text-green-400'
-                    }`}>
-                      {timeRemaining.includes('expired') ? 'Rate expired' : `Rate locked: ${timeRemaining}`}
+                  <div
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full ${
+                      timeRemaining.includes("expired")
+                        ? "bg-red-100 dark:bg-red-900/20"
+                        : timeRemaining.startsWith("0:") &&
+                          !timeRemaining.startsWith("0:0")
+                        ? "bg-orange-100 dark:bg-orange-900/20"
+                        : timeRemaining.startsWith("0:0")
+                        ? "bg-red-100 dark:bg-red-900/20"
+                        : "bg-green-100 dark:bg-green-900/20"
+                    }`}
+                  >
+                    <Zap
+                      className={`h-3 w-3 ${
+                        timeRemaining.includes("expired")
+                          ? "text-red-600 dark:text-red-400"
+                          : timeRemaining.startsWith("0:") &&
+                            !timeRemaining.startsWith("0:0")
+                          ? "text-orange-600 dark:text-orange-400"
+                          : timeRemaining.startsWith("0:0")
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-green-600 dark:text-green-400"
+                      }`}
+                    />
+                    <span
+                      className={`text-xs font-medium ${
+                        timeRemaining.includes("expired")
+                          ? "text-red-600 dark:text-red-400"
+                          : timeRemaining.startsWith("0:") &&
+                            !timeRemaining.startsWith("0:0")
+                          ? "text-orange-600 dark:text-orange-400"
+                          : timeRemaining.startsWith("0:0")
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-green-600 dark:text-green-400"
+                      }`}
+                    >
+                      {timeRemaining.includes("expired")
+                        ? "Rate expired"
+                        : `Rate locked: ${timeRemaining}`}
                     </span>
                   </div>
                 </div>
               )}
-              
+
               {/* Exchange Button */}
               <Button
                 variant="crypto"
@@ -1088,7 +1175,9 @@ export function ExchangeWidget() {
                   !depositAddress.trim()
                 }
                 className={`px-8 ${
-                  exchangeType === "fixed" && validUntil && isRateCriticallyLow(validUntil)
+                  exchangeType === "fixed" &&
+                  validUntil &&
+                  isRateCriticallyLow(validUntil)
                     ? "animate-pulse"
                     : ""
                 }`}
@@ -1097,7 +1186,6 @@ export function ExchangeWidget() {
               </Button>
             </div>
           </TabsContent>
-
         </Tabs>
 
         <p className="text-xs text-center text-muted-foreground mt-6">
@@ -1106,9 +1194,7 @@ export function ExchangeWidget() {
       </CardContent>
 
       {/* Transaction Confirmation Dialog */}
-      <Dialog
-        open={showTransactionDialog}
-      >
+      <Dialog open={showTransactionDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1127,8 +1213,12 @@ export function ExchangeWidget() {
                 <Shield className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-1">
-                    <div><strong>Order ID:</strong> {currentTransaction.id}</div>
-                    <div><strong>Created:</strong> {transactionCreatedAt}</div>
+                    <div>
+                      <strong>Order ID:</strong> {currentTransaction.id}
+                    </div>
+                    <div>
+                      <strong>Created:</strong> {transactionCreatedAt}
+                    </div>
                   </div>
                 </AlertDescription>
               </Alert>
@@ -1158,7 +1248,7 @@ export function ExchangeWidget() {
                       )}
                     </Button>
                     <div className="ml-2">
-                      <QRCodeComponent 
+                      <QRCodeComponent
                         value={currentTransaction.payinAddress}
                         size={80}
                         title=""

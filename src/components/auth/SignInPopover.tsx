@@ -533,7 +533,6 @@ export function SignInPopover({ children }: SignInPopoverProps) {
           window.dispatchEvent(new CustomEvent("auth-state-changed"));
         }, 1000);
       } else {
-        console.log("response: ", response)
         throw new Error("Invalid response format");
       }
     } catch (err) {

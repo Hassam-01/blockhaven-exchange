@@ -154,9 +154,7 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
   // Stats loading functions - defined early to be used in useEffect
   const loadFAQStats = React.useCallback(async () => {
     try {
-      console.log("Loading FAQ stats...");
       const stats = await getFAQStats(token);
-      console.log("FAQ stats received:", stats);
       setFaqStats(stats);
     } catch (err) {
       console.error("Failed to load FAQ stats:", err);

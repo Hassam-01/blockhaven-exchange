@@ -488,13 +488,6 @@ export async function validateAddress(
 ): Promise<ValidationResponse | null> {
     try {
         const params = new URLSearchParams({ currency, address });
-        
-        // Log request parameters
-        console.log('Address validation request:', {
-            currency,
-            address,
-            url: `${CHANGENOW_API_BASE}/validate/address?${params.toString()}`
-        });
 
         const response = await fetch(
             `${CHANGENOW_API_BASE}/validate/address?${params.toString()}`,
@@ -503,13 +496,6 @@ export async function validateAddress(
         if (!response.ok) throw new Error('Failed to validate address');
         
         const responseData = await response.json();
-        
-        // Log response data
-        console.log('Address validation response:', {
-            requestParams: { currency, address },
-            response: responseData,
-            isValid: responseData?.result
-        });
         
         return responseData;
     } catch (error) {
@@ -608,7 +594,7 @@ export async function getExchangeRange(
         if (options?.fromNetwork) params.append('fromNetwork', options.fromNetwork);
         if (options?.toNetwork) params.append('toNetwork', options.toNetwork);
         if (options?.flow) params.append('flow', options.flow);
-
+        
         const response = await fetch(
             `${CHANGENOW_API_BASE}/exchange/range?${params.toString()}`,
             {
