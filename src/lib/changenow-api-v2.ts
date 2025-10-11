@@ -488,13 +488,30 @@ export async function validateAddress(
 ): Promise<ValidationResponse | null> {
     try {
         const params = new URLSearchParams({ currency, address });
+        
+        // Log request parameters
+        console.log('Address validation request:', {
+            currency,
+            address,
+            url: `${CHANGENOW_API_BASE}/validate/address?${params.toString()}`
+        });
 
         const response = await fetch(
             `${CHANGENOW_API_BASE}/validate/address?${params.toString()}`,
         );
 
         if (!response.ok) throw new Error('Failed to validate address');
-        return await response.json();
+        
+        const responseData = await response.json();
+        
+        // Log response data
+        console.log('Address validation response:', {
+            requestParams: { currency, address },
+            response: responseData,
+            isValid: responseData?.result
+        });
+        
+        return responseData;
     } catch (error) {
         console.error('Error validating address:', error);
         return null;

@@ -166,7 +166,7 @@ export function ExchangeWidget() {
         const config = await getCurrentServiceFee();
         setServiceFeeConfig(config as EnhancedServiceFeeConfig);
       } catch (error) {
-        console.log("Error Fetching Exchange Rate! ");
+        // Service fee config fetch failed - will use defaults
       }
     };
 
@@ -248,7 +248,6 @@ export function ExchangeWidget() {
           throw new Error("No currencies returned from API");
         }
       } catch (error) {
-        console.error("Failed to fetch currencies:", error);
         toast({
           title: "Error",
           description: "Failed to load available currencies",
@@ -277,7 +276,7 @@ export function ExchangeWidget() {
           setCryptoForFiat(cryptoCurrs);
         }
       } catch (error) {
-        console.error("Failed to fetch fiat currencies:", error);
+        // Fiat currencies fetch failed - fiat exchange will be unavailable
       }
     };
 
@@ -296,6 +295,21 @@ export function ExchangeWidget() {
     const currency = allCurrencies.find((c) => c.ticker === toCurrency);
     setSelectedToCurrency(currency || null);
     setLeftColor(currency?.color || "");
+    
+    // Log detailed currency information
+    console.log('To currency details updated:', {
+      ticker: toCurrency,
+      currencyDetails: currency ? {
+        name: currency.name,
+        ticker: currency.ticker,
+        image: currency.image,
+        hasExternalId: currency.hasExternalId,
+        isFiat: currency.isFiat,
+        color: currency.color,
+        network: currency.network
+      } : 'Currency not found in available currencies',
+      availableCurrenciesCount: allCurrencies.length
+    });
   }, [toCurrency, allCurrencies]);
 
   // Close currency selector popovers when page scrolls
@@ -349,7 +363,6 @@ export function ExchangeWidget() {
 
       return estimate;
     } catch (error) {
-      console.error("Error estimating fiat amount:", error);
       return null;
     }
   }, []);
@@ -372,7 +385,7 @@ export function ExchangeWidget() {
             setMaxAmount(range.maxAmount.toString());
           }
         } catch (error) {
-          console.error("Error fetching amount limits:", error);
+          // Error fetching amount limits - will use defaults
         }
       }
     };
@@ -444,7 +457,6 @@ export function ExchangeWidget() {
             setFromAmount(result.fromAmount?.toString() ?? "");
           }
       } catch (err) {
-        console.error("Error estimating amount:", err);
         toast({
           title: "Error Estimating",
           description: err instanceof Error ? err.message : "Unknown error",
@@ -489,7 +501,9 @@ export function ExchangeWidget() {
 
   const handleFromCurrencyChange = useCallback(
     (value: string) => {
+      
       if (toCurrency === value) {
+        console.log('Currency conflict detected, swapping to currency:', toCurrency, '→', fromCurrency);
         setToCurrency(fromCurrency);
       }
       setFromCurrency(value);
@@ -499,7 +513,14 @@ export function ExchangeWidget() {
 
   const handleToCurrencyChange = useCallback(
     (value: string) => {
+      console.log('To currency changed:', {
+        previousCurrency: toCurrency,
+        newCurrency: value,
+        changeType: 'TO_CURRENCY_SELECTION'
+      });
+      
       if (fromCurrency === value) {
+        console.log('Currency conflict detected, swapping from currency:', fromCurrency, '→', toCurrency);
         setFromCurrency(toCurrency);
       }
       setToCurrency(value);
@@ -538,7 +559,7 @@ export function ExchangeWidget() {
     try {
       // Validate deposit address
       const depositValidation = await validateAddress(
-        toCurrency,
+        selectedToCurrency?.network || toCurrency,
         depositAddress
       );
       if (!depositValidation?.result) {
@@ -555,7 +576,7 @@ export function ExchangeWidget() {
       // Validate refund address only if provided
       if (refundAddress.trim()) {
         const refundValidation = await validateAddress(
-          fromCurrency,
+          selectedFromCurrency?.network || fromCurrency,
           refundAddress
         );
         if (!refundValidation?.result) {
@@ -725,6 +746,9 @@ export function ExchangeWidget() {
       // Validate wallet address for crypto payout (buy) or crypto input (sell)
       const cryptoAddress = type === "buy" ? depositAddress : depositAddress;
       const cryptoCurrency = type === "buy" ? toCurrency : fromCurrency;
+      const cryptoNetwork = type === "buy" 
+        ? (selectedToCurrency?.network || toCurrency)
+        : (selectedFromCurrency?.network || fromCurrency);
       
       if (!cryptoAddress.trim()) {
         toast({
@@ -737,7 +761,7 @@ export function ExchangeWidget() {
 
       // Validate the crypto wallet address
       try {
-        const addressValidation = await validateAddress(cryptoCurrency, cryptoAddress);
+        const addressValidation = await validateAddress(cryptoNetwork, cryptoAddress);
         if (!addressValidation?.result) {
           toast({
             title: "Invalid Wallet Address",
