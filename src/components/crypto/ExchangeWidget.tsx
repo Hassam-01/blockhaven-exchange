@@ -368,15 +368,19 @@ export function ExchangeWidget() {
   // Minimum and Maximum amounts
   useEffect(() => {
     const fetchAmountLimits = async () => {
-      if (fromCurrency && toCurrency) {
+      if (fromCurrency && toCurrency && allCurrencies.length > 0) {
         try {
+          // Find current currency objects to get the correct network
+          const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
+          const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
+          
           // const minResult = await getMinimalExchangeAmount(fromCurrency, toCurrency, {
           //   flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard'
           // });
           const range = await getExchangeRange(fromCurrency, toCurrency, {
             flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
-            fromNetwork: selectedFromCurrency?.network || undefined,
-            toNetwork: selectedToCurrency?.network || undefined,
+            fromNetwork: currentFromCurrency?.network || undefined,
+            toNetwork: currentToCurrency?.network || undefined,
           });
           if (range) {
             setMinAmount(range.minAmount.toString());
@@ -399,8 +403,7 @@ export function ExchangeWidget() {
     fromCurrency,
     toCurrency,
     exchangeType,
-    selectedFromCurrency?.network,
-    selectedToCurrency?.network,
+    allCurrencies,
   ]);
 
   // Estimate amounts based on calculation type
@@ -458,6 +461,10 @@ export function ExchangeWidget() {
 
       setIsLoading(true);
       try {
+        // Find current currency objects to get the correct network
+        const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
+        const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
+        
         // Regular crypto-to-crypto exchange
         const result = await getEstimatedExchangeAmount(
           fromCurrency,
@@ -466,8 +473,8 @@ export function ExchangeWidget() {
             [calculationType === "direct" ? "fromAmount" : "toAmount"]: amount,
             flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
             type: calculationType,
-            fromNetwork: selectedFromCurrency?.network || undefined,
-            toNetwork: selectedToCurrency?.network || undefined,
+            fromNetwork: currentFromCurrency?.network || undefined,
+            toNetwork: currentToCurrency?.network || undefined,
           }
         );
 
@@ -538,8 +545,7 @@ export function ExchangeWidget() {
     selectedFiatCurrency,
     performFiatEstimate,
     toast,
-    selectedFromCurrency?.network,
-    selectedToCurrency?.network,
+    allCurrencies,
     minAmount,
     maxAmount,
   ]);
@@ -617,9 +623,13 @@ export function ExchangeWidget() {
     }
 
     try {
+      // Find current currency objects to get the correct network
+      const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
+      const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
+      
       // Validate deposit address
       const depositValidation = await validateAddress(
-        selectedToCurrency?.network || toCurrency,
+        currentToCurrency?.network || toCurrency,
         depositAddress
       );
       if (!depositValidation?.result) {
@@ -636,7 +646,7 @@ export function ExchangeWidget() {
       // Validate refund address only if provided
       if (refundAddress.trim()) {
         const refundValidation = await validateAddress(
-          selectedFromCurrency?.network || fromCurrency,
+          currentFromCurrency?.network || fromCurrency,
           refundAddress
         );
         if (!refundValidation?.result) {
@@ -758,11 +768,15 @@ export function ExchangeWidget() {
       // Create the exchange transaction
       setIsCreatingTransaction(true);
       try {
+        // Find current currency objects to get the correct network
+        const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
+        const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
+        
         const transaction = await createExchangeTransaction({
           fromCurrency,
           toCurrency,
-          fromNetwork: selectedFromCurrency?.network || fromCurrency,
-          toNetwork: selectedToCurrency?.network || toCurrency,
+          fromNetwork: currentFromCurrency?.network || fromCurrency,
+          toNetwork: currentToCurrency?.network || toCurrency,
           fromAmount: calculationType === "direct" ? fromAmount : undefined,
           toAmount: calculationType === "reverse" ? toAmount : undefined,
           address: depositAddress,
@@ -816,10 +830,15 @@ export function ExchangeWidget() {
       // Validate wallet address for crypto payout (buy) or crypto input (sell)
       const cryptoAddress = type === "buy" ? depositAddress : depositAddress;
       const cryptoCurrency = type === "buy" ? toCurrency : fromCurrency;
+      
+      // Find current currency objects to get the correct network
+      const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
+      const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
+      
       const cryptoNetwork =
         type === "buy"
-          ? selectedToCurrency?.network || toCurrency
-          : selectedFromCurrency?.network || fromCurrency;
+          ? currentToCurrency?.network || toCurrency
+          : currentFromCurrency?.network || fromCurrency;
 
       if (!cryptoAddress.trim()) {
         toast({
@@ -856,14 +875,18 @@ export function ExchangeWidget() {
       // Create fiat transaction
       setIsCreatingTransaction(true);
       try {
+        // Find current currency objects to get the correct network
+        const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
+        const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
+        
         const fiatTransaction = await createFiatTransaction({
           from_amount: parseFloat(fromAmount),
           from_currency: type === "buy" ? selectedFiatCurrency : fromCurrency,
           to_currency: type === "buy" ? toCurrency : selectedFiatCurrency,
           from_network:
-            type === "buy" ? null : selectedFromCurrency?.network || null,
+            type === "buy" ? null : currentFromCurrency?.network || null,
           to_network:
-            type === "buy" ? selectedToCurrency?.network || toCurrency : null,
+            type === "buy" ? currentToCurrency?.network || toCurrency : null,
           payout_address: cryptoAddress,
           deposit_type: "SEPA_1", // Default deposit type
           payout_type: type === "buy" ? "CRYPTO_THROUGH_CN" : "SEPA_1",
@@ -1058,10 +1081,10 @@ export function ExchangeWidget() {
               {/* Destination Address */}
               <WalletAddressInput
                 label={`Destination (${
-                  selectedToCurrency?.ticker.toUpperCase() || "crypto"
+                  selectedToCurrency?.name || "crypto"
                 })`}
                 placeholder={`Your ${
-                  selectedToCurrency?.ticker.toUpperCase() || "crypto"
+                  selectedToCurrency?.name || "crypto"
                 } address`}
                 value={depositAddress}
                 onChange={setDepositAddress}
@@ -1082,10 +1105,10 @@ export function ExchangeWidget() {
             <div className="mt-4">
               <WalletAddressInput
                 label={`Refund Address (${
-                  selectedFromCurrency?.ticker.toUpperCase() || "crypto"
+                  selectedFromCurrency?.name || "crypto"
                 }) - Optional`}
                 placeholder={`Your ${
-                  selectedFromCurrency?.ticker.toUpperCase() || "crypto"
+                  selectedFromCurrency?.name || "crypto"
                 } address for refunds`}
                 value={refundAddress}
                 onChange={setRefundAddress}
