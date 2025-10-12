@@ -1,7 +1,6 @@
-import React from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { type MarketInfo } from '@/lib/changenow-api';
+import { type MarketInfo } from '@/lib/changenow-api-v2';
 
 interface CoinCardProps {
   coin: MarketInfo;
