@@ -7,7 +7,7 @@ import {
 import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { ExchangeCurrency } from "@/lib/changenow-api-v2";
+import { ExchangeCurrency } from "@/lib/blockhaven-exchange-api";
 
 interface Props {
   value: string;
@@ -80,11 +80,13 @@ export default function CurrencySelector({
                 className="text-lg font-bold shrink-0"
                 style={{ color: selectedCurrency.color }}
               >
-                {/* {selectedCurrency.logo} */}
-                <img
-                  src={selectedCurrency?.logo}
-                  alt={`${selectedCurrency.name} logo`}
-                  className="w-6 h-6 rounded-full shrink-0 object-cover" />
+                {/* Only show image if logo exists, and no alt if missing */}
+                {selectedCurrency?.logo && (
+                  <img
+                    src={selectedCurrency.logo}
+                    alt=""
+                    className="w-6 h-6 rounded-full shrink-0 object-cover" />
+                )}
               </span>
               <span className="font-medium truncate">
                 {selectedCurrency.name}
@@ -146,12 +148,15 @@ export default function CurrencySelector({
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="relative">
-                    <img
-                      src={c?.logo}
-                      alt={`${c.name} logo`}
-                      className="w-8 h-8 rounded-full shrink-0 object-cover border border-border/20" 
-                      loading="lazy"
-                    />
+                    {/* Only show image if logo exists, and no alt if missing */}
+                    {c?.logo && (
+                      <img
+                        src={c.logo}
+                        alt=""
+                        className="w-8 h-8 rounded-full shrink-0 object-cover border border-border/20" 
+                        loading="lazy"
+                      />
+                    )}
                     {c.featured && (
                       <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border border-background"></div>
                     )}

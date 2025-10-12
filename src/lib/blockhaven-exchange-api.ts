@@ -40,7 +40,7 @@ export interface MarketInfo {
 
 /**
  * Create an exchange transaction through BlockHeaven backend.
- * This function goes through your backend instead of directly to ChangeNOW.
+ * This function goes through your backend instead of directly to external providers.
  */
 export async function createExchangeTransaction(
   body: {
@@ -135,7 +135,9 @@ export async function validateAddress(
     const params = new URLSearchParams({ currency, address });
 
     const response = await fetch(
-      `${API_CONFIG.BASE_URL}/api/blockhaven/validate-address?${params.toString()}`,
+      `${
+        API_CONFIG.BASE_URL
+      }/api/blockhaven/validate-address?${params.toString()}`,
       {
         headers: getHeaders(),
       }

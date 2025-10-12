@@ -9,7 +9,7 @@
   - [x] Updated README.md to remove Lovable references
 
 - [x] Fixed TypeScript errors
-  - [x] Replaced `any` type with proper `RawCurrencyData` interface in changenow-api.ts
+  - [x] Replaced `any` type with proper `RawCurrencyData` interface in blockhaven-exchange-api.ts
 
 ### Configuration
 - [x] Environment variables properly configured (.env.example provided)

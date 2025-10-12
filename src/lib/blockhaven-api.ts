@@ -415,7 +415,6 @@ export async function getEstimatedExchangeAmount(
   );
 
   const result = await res.json();
-
   if (!res.ok) {
     const message = result?.error ?? "Failed to fetch estimated amount";
 

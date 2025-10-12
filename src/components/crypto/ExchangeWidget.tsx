@@ -35,7 +35,7 @@ import {
   createFiatTransaction,
   getFiatCurrencies,
   getCryptoCurrenciesForFiat,
-} from "@/lib/changenow-api-v2";
+} from "@/lib/blockhaven-exchange-api";
 import {
   getCurrentServiceFee,
   ServiceFeeConfig,

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Copy, Check, RefreshCw, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
-import { getTransactionStatus } from '@/lib/changenow-api-v2';
+import { getTransactionStatus } from '@/lib/blockhaven-exchange-api';
 import { TransactionStatusResponse } from '@/const/types';
 import { useToast } from '@/hooks/use-toast';
 import {

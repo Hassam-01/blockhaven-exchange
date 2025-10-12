@@ -1,6 +1,6 @@
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { type MarketInfo } from '@/lib/changenow-api-v2';
+import { type MarketInfo } from '@/lib/blockhaven-exchange-api';
 
 interface CoinCardProps {
   coin: MarketInfo;
