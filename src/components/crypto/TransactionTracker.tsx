@@ -361,6 +361,35 @@ export function TransactionTracker({
                   </div>
                 )}
 
+                {transaction.payinExtraId && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Memo ID</p>
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <p className="text-xs break-all font-mono">
+                        {transaction.payinExtraId}
+                      </p>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            copyToClipboard(
+                              transaction.payinExtraId,
+                              "Memo ID"
+                            )
+                          }
+                        >
+                          {copiedField === "Memo ID" ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Transaction Hashes */}
                 {transaction.payinHash && (
                   <div className="space-y-2">
@@ -426,7 +455,7 @@ export function TransactionTracker({
 
                 {transaction.payoutExtraId && (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Memo ID</p>
+                    <p className="text-sm font-medium">Payout Extra ID</p>
                     <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                       <p className="text-xs break-all font-mono">
                         {transaction.payoutExtraId}

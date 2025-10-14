@@ -48,6 +48,7 @@ export interface CreateTransactionResponse {
   payinAddress: string;
   payoutAddress: string;
   payoutExtraId?: string;
+  payinExtraId?: string;
   fromCurrency: string;
   toCurrency: string;
   fromAmount: number;
@@ -92,6 +93,7 @@ export interface TransactionStatusResponse {
   payinAddress: string;
   payoutAddress: string;
   payoutExtraId?: string;
+  payinExtraId?: string;
   fromCurrency: string;
   toCurrency: string;
   fromAmount: number;

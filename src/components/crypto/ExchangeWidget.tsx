@@ -371,9 +371,13 @@ export function ExchangeWidget() {
       if (fromCurrency && toCurrency && allCurrencies.length > 0) {
         try {
           // Find current currency objects to get the correct network
-          const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
-          const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
-          
+          const currentFromCurrency = allCurrencies.find(
+            (c) => c.ticker === fromCurrency
+          );
+          const currentToCurrency = allCurrencies.find(
+            (c) => c.ticker === toCurrency
+          );
+
           // const minResult = await getMinimalExchangeAmount(fromCurrency, toCurrency, {
           //   flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard'
           // });
@@ -399,12 +403,7 @@ export function ExchangeWidget() {
     };
 
     fetchAmountLimits();
-  }, [
-    fromCurrency,
-    toCurrency,
-    exchangeType,
-    allCurrencies,
-  ]);
+  }, [fromCurrency, toCurrency, exchangeType, allCurrencies]);
 
   // Estimate amounts based on calculation type
   useEffect(() => {
@@ -426,7 +425,8 @@ export function ExchangeWidget() {
       }
 
       // Check if amount is within min/max limits before making API call
-      const currentAmount = calculationType === "direct" ? amount : parseFloat(fromAmount);
+      const currentAmount =
+        calculationType === "direct" ? amount : parseFloat(fromAmount);
       const minAmountNum = parseFloat(minAmount);
       const maxAmountNum = parseFloat(maxAmount);
 
@@ -462,9 +462,13 @@ export function ExchangeWidget() {
       setIsLoading(true);
       try {
         // Find current currency objects to get the correct network
-        const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
-        const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
-        
+        const currentFromCurrency = allCurrencies.find(
+          (c) => c.ticker === fromCurrency
+        );
+        const currentToCurrency = allCurrencies.find(
+          (c) => c.ticker === toCurrency
+        );
+
         // Regular crypto-to-crypto exchange
         const result = await getEstimatedExchangeAmount(
           fromCurrency,
@@ -624,9 +628,13 @@ export function ExchangeWidget() {
 
     try {
       // Find current currency objects to get the correct network
-      const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
-      const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
-      
+      const currentFromCurrency = allCurrencies.find(
+        (c) => c.ticker === fromCurrency
+      );
+      const currentToCurrency = allCurrencies.find(
+        (c) => c.ticker === toCurrency
+      );
+
       // Validate deposit address
       const depositValidation = await validateAddress(
         currentToCurrency?.network || toCurrency,
@@ -769,9 +777,13 @@ export function ExchangeWidget() {
       setIsCreatingTransaction(true);
       try {
         // Find current currency objects to get the correct network
-        const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
-        const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
-        
+        const currentFromCurrency = allCurrencies.find(
+          (c) => c.ticker === fromCurrency
+        );
+        const currentToCurrency = allCurrencies.find(
+          (c) => c.ticker === toCurrency
+        );
+
         const transaction = await createExchangeTransaction({
           fromCurrency,
           toCurrency,
@@ -830,11 +842,15 @@ export function ExchangeWidget() {
       // Validate wallet address for crypto payout (buy) or crypto input (sell)
       const cryptoAddress = type === "buy" ? depositAddress : depositAddress;
       const cryptoCurrency = type === "buy" ? toCurrency : fromCurrency;
-      
+
       // Find current currency objects to get the correct network
-      const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
-      const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
-      
+      const currentFromCurrency = allCurrencies.find(
+        (c) => c.ticker === fromCurrency
+      );
+      const currentToCurrency = allCurrencies.find(
+        (c) => c.ticker === toCurrency
+      );
+
       const cryptoNetwork =
         type === "buy"
           ? currentToCurrency?.network || toCurrency
@@ -876,9 +892,13 @@ export function ExchangeWidget() {
       setIsCreatingTransaction(true);
       try {
         // Find current currency objects to get the correct network
-        const currentFromCurrency = allCurrencies.find((c) => c.ticker === fromCurrency);
-        const currentToCurrency = allCurrencies.find((c) => c.ticker === toCurrency);
-        
+        const currentFromCurrency = allCurrencies.find(
+          (c) => c.ticker === fromCurrency
+        );
+        const currentToCurrency = allCurrencies.find(
+          (c) => c.ticker === toCurrency
+        );
+
         const fiatTransaction = await createFiatTransaction({
           from_amount: parseFloat(fromAmount),
           from_currency: type === "buy" ? selectedFiatCurrency : fromCurrency,
@@ -898,6 +918,8 @@ export function ExchangeWidget() {
             },
           },
         });
+
+        console.log("Fiat transaction created:", fiatTransaction);
 
         if (fiatTransaction) {
           // For fiat transactions, we can show the redirect URL or transaction details
@@ -1080,9 +1102,7 @@ export function ExchangeWidget() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
               {/* Destination Address */}
               <WalletAddressInput
-                label={`Destination (${
-                  selectedToCurrency?.name || "crypto"
-                })`}
+                label={`Destination (${selectedToCurrency?.name || "crypto"})`}
                 placeholder={`Your ${
                   selectedToCurrency?.name || "crypto"
                 } address`}
@@ -1297,6 +1317,29 @@ export function ExchangeWidget() {
                       onClick={() => handleCopyAddress(depositAddress)}
                     >
                       {copiedAddress === depositAddress ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Memo ID:
+                  </label>
+                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    <code className="flex-1 text-sm font-mono break-all">
+                      {currentTransaction.payinExtraId}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        handleCopyAddress(currentTransaction.payinExtraId)
+                      }
+                    >
+                      {copiedAddress === currentTransaction.payinExtraId ? (
                         <Check className="w-4 h-4" />
                       ) : (
                         <Copy className="w-4 h-4" />
