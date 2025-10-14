@@ -426,7 +426,7 @@ export function TransactionTracker({
 
                 {transaction.payoutExtraId && (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Payout Extra/Memo ID</p>
+                    <p className="text-sm font-medium">Memo ID</p>
                     <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                       <p className="text-xs break-all font-mono">
                         {transaction.payoutExtraId}
