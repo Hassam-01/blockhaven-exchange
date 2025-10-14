@@ -6,7 +6,7 @@ interface LogoProps {
   height?: number;
 }
 
-export function Logo({ className = "", width = 200, height = 2 }: LogoProps) {
+export function Logo({ className = "", width = 200, height = 54 }: LogoProps) {
   return (
     <div className={`flex items-center ${className}`}>
       <svg

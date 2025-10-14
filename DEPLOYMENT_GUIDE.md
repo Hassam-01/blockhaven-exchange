@@ -12,7 +12,6 @@
 1. Create `.env` file with production values:
 ```bash
 VITE_API_BASE_URL=https://your-api-domain.com
-VITE_CHANGENOW_API_KEY=your_production_api_key
 ```
 
 2. Verify all environment variables are properly prefixed with `VITE_`

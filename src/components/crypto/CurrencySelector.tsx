@@ -64,7 +64,7 @@ export default function CurrencySelector({
     const stable = currencies.filter(c => c.isStable).length;
     return { total, featured, stable };
   }, [currencies]);
-
+  console.log("selected currenct: ", selectedCurrency)
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger

@@ -51,7 +51,6 @@ cp .env.example .env
 Edit the `.env` file with your configuration:
 ```bash
 VITE_API_BASE_URL=your_backend_api_url
-VITE_CHANGENOW_API_KEY=your_changenow_api_key
 ```
 
 4. Start the development server:
@@ -90,7 +89,6 @@ The application can be deployed to any static hosting service like Vercel, Netli
 Make sure to set the following environment variables in your production environment:
 
 - `VITE_API_BASE_URL`: Your backend API URL
-- `VITE_CHANGENOW_API_KEY`: Your ChangeNow API key
 
 ## License
 
