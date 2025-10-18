@@ -75,6 +75,8 @@ import {
   getServiceFeeHistory,
   resetServiceFeeConfig,
   checkAdminAccess,
+  fetchPairs,
+  fetchCurrencies,
 } from "@/lib/dashboard-services-api";
 
 import type {
@@ -144,6 +146,10 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
   const [floatingRatePercentage, setFloatingRatePercentage] =
     useState<string>("");
 
+  // Exchange state
+  const [exchangeLoading, setExchangeLoading] = useState(false);
+  const [exchangeMessage, setExchangeMessage] = useState<string | null>(null);
+
   // Form state
   const [faqForm, setFaqForm] = useState<CreateFAQRequest>({
     question: "",
@@ -167,6 +173,33 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       setTestimonialStats(stats);
     } catch (err) {
       console.error("Failed to load testimonial stats:", err);
+    }
+  }, [token]);
+
+  // Exchange functions
+  const handleFetchPairs = React.useCallback(async () => {
+    setExchangeLoading(true);
+    setExchangeMessage(null);
+    try {
+      const result = await fetchPairs(token);
+      setExchangeMessage(result.message || "Pairs fetched successfully");
+    } catch (err) {
+      setExchangeMessage(err instanceof Error ? err.message : "Failed to fetch pairs");
+    } finally {
+      setExchangeLoading(false);
+    }
+  }, [token]);
+
+  const handleFetchCurrencies = React.useCallback(async () => {
+    setExchangeLoading(true);
+    setExchangeMessage(null);
+    try {
+      const result = await fetchCurrencies(token);
+      setExchangeMessage(result.message || "Currencies fetched successfully");
+    } catch (err) {
+      setExchangeMessage(err instanceof Error ? err.message : "Failed to fetch currencies");
+    } finally {
+      setExchangeLoading(false);
     }
   }, [token]);
 
@@ -283,7 +316,6 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
           ? true
           : false;
       const testimonialData = await getAllTestimonials(token, isApproved);
-      console.log("Testimonial data received:", testimonialData);
       // Handle the API response structure: { testimonials: [...] }
       if (
         testimonialData &&
@@ -346,8 +378,6 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
         getCurrentServiceFeeConfig(token).catch(() => null),
         getServiceFeeHistory(token).catch(() => []),
       ]);
-
-      console.log("Service fee data loaded:", { history, currentConfig });
 
       // Ensure history is always an array
       setServiceFeeHistory(Array.isArray(history) ? history : []);
@@ -550,11 +580,12 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="faqs">FAQs</TabsTrigger>
             <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
             <TabsTrigger value="fees">Service Fees</TabsTrigger>
+            <TabsTrigger value="exchanges">Exchanges</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -930,6 +961,46 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                       </Button>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Exchanges Tab */}
+          <TabsContent value="exchanges" className="mt-6">
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Exchange Data Management</CardTitle>
+                  <CardDescription>
+                    Fetch and update currency pairs and currencies from external sources
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-4">
+                    <Button
+                      onClick={handleFetchPairs}
+                      disabled={exchangeLoading}
+                      className="flex items-center gap-2"
+                    >
+                      <DollarSign className="h-4 w-4" />
+                      {exchangeLoading ? "Fetching..." : "Fetch Pairs"}
+                    </Button>
+                    <Button
+                      onClick={handleFetchCurrencies}
+                      disabled={exchangeLoading}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      {exchangeLoading ? "Fetching..." : "Fetch Currencies"}
+                    </Button>
+                  </div>
+                  {exchangeMessage && (
+                    <Alert className={exchangeMessage.includes("success") ? "border-green-500" : "border-red-500"}>
+                      <AlertDescription>{exchangeMessage}</AlertDescription>
+                    </Alert>
+                  )}
                 </CardContent>
               </Card>
             </div>

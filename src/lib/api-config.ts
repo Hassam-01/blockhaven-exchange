@@ -49,6 +49,8 @@ export const API_CONFIG = {
     EXCHANGES: {
       CREATE: '/api/exchanges',
       STATUS: '/api/exchanges/status',
+      FETCH_PAIRS: '/api/exchanges/fetch-pairs',
+      FETCH_CURRENCIES: '/api/exchanges/fetch-currencies',
     },
     // Contact endpoint
     CONTACT: '/api/contact',

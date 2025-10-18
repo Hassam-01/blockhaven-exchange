@@ -478,6 +478,30 @@ export const handleApiError = (error: unknown): string => {
   return "An unexpected error occurred. Please try again.";
 };
 
+// =============================================================================
+// EXCHANGE ADMIN ENDPOINTS
+// =============================================================================
+
+export const fetchPairs = async (token: string): Promise<{ success: boolean; message: string }> => {
+  return apiCall(API_CONFIG.ENDPOINTS.EXCHANGES.FETCH_PAIRS, {
+    method: HTTP_METHODS.POST,
+    headers: getAuthHeaders(token),
+    body: JSON.stringify({}),
+  });
+};
+
+export const fetchCurrencies = async (token: string): Promise<{ success: boolean; message: string }> => {
+  return apiCall(API_CONFIG.ENDPOINTS.EXCHANGES.FETCH_CURRENCIES, {
+    method: HTTP_METHODS.POST,
+    headers: getAuthHeaders(token),
+    body: JSON.stringify({}),
+  });
+};
+
+// =============================================================================
+// ADMIN ACCESS CHECK
+// =============================================================================
+
 // Function to check if user has admin privileges (based on token payload)
 export const checkAdminAccess = async (token: string): Promise<boolean> => {
   try {
