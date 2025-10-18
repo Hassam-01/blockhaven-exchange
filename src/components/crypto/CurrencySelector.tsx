@@ -110,7 +110,7 @@ export default function CurrencySelector({
         <div className="px-4 py-2 border-b bg-muted/30">
           <div className="text-xs text-muted-foreground">
             {filtered.length} of {currencyStats.total} currencies •{" "}
-            {currencyStats.featured} featured • {currencyStats.stable} stable
+            {currencyStats.featured} featured • {30} stable
           </div>
         </div>
 

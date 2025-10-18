@@ -149,6 +149,10 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
   // Exchange state
   const [exchangeLoading, setExchangeLoading] = useState(false);
   const [exchangeMessage, setExchangeMessage] = useState<string | null>(null);
+  const [maintenanceMode, setMaintenanceMode] = useState(() => {
+    const localStorageMode = localStorage.getItem('blockhaven-maintenance-mode');
+    return localStorageMode ? localStorageMode === 'true' : import.meta.env.VITE_MAINTENANCE_MODE === 'true';
+  });
 
   // Form state
   const [faqForm, setFaqForm] = useState<CreateFAQRequest>({
@@ -202,6 +206,13 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
       setExchangeLoading(false);
     }
   }, [token]);
+
+  const handleToggleMaintenanceMode = React.useCallback(() => {
+    const newMode = !maintenanceMode;
+    localStorage.setItem('blockhaven-maintenance-mode', newMode.toString());
+    setMaintenanceMode(newMode);
+    setExchangeMessage(`Maintenance mode ${newMode ? 'enabled' : 'disabled'}`);
+  }, [maintenanceMode]);
 
   //   const loadServiceFeeStats = React.useCallback(async () => {
   //     try {
@@ -999,6 +1010,40 @@ export function AdminDashboard({ onBack, token }: AdminDashboardProps) {
                   {exchangeMessage && (
                     <Alert className={exchangeMessage.includes("success") ? "border-green-500" : "border-red-500"}>
                       <AlertDescription>{exchangeMessage}</AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Maintenance Mode</CardTitle>
+                  <CardDescription>
+                    Enable maintenance mode to show a maintenance page to all users
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Maintenance Mode</p>
+                      <p className="text-sm text-muted-foreground">
+                        Currently: {maintenanceMode ? "Enabled" : "Disabled"}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleToggleMaintenanceMode}
+                      variant={maintenanceMode ? "destructive" : "default"}
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      {maintenanceMode ? "Disable Maintenance" : "Enable Maintenance"}
+                    </Button>
+                  </div>
+                  {maintenanceMode && (
+                    <Alert className="border-orange-500">
+                      <AlertDescription>
+                        Maintenance mode is currently active. All users will see the maintenance page.
+                      </AlertDescription>
                     </Alert>
                   )}
                 </CardContent>
