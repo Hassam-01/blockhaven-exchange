@@ -40,28 +40,28 @@ export default function CurrencySelector({
   const filtered = useMemo(() => {
     if (!search.trim()) {
       // Filter out currencies with null/undefined network
-      return currencies.filter(c => 
-        c.network !== null && 
-        c.network !== undefined && 
-        c.network.trim() !== ''
+      return currencies.filter(
+        (c) =>
+          c.network !== null &&
+          c.network !== undefined &&
+          c.network.trim() !== ""
       );
     }
     const q = search.toLowerCase();
     return currencies.filter(
-      c =>
-        c.network !== null && 
-        c.network !== undefined && 
-        c.network.trim() !== '' &&
-        (c.name.toLowerCase().includes(q) ||
-        c.ticker.toLowerCase().includes(q))
+      (c) =>
+        c.network !== null &&
+        c.network !== undefined &&
+        c.network.trim() !== "" &&
+        (c.name.toLowerCase().includes(q) || c.ticker.toLowerCase().includes(q))
     );
   }, [currencies, search]);
 
   // Add currency count info
   const currencyStats = useMemo(() => {
     const total = currencies.length;
-    const featured = currencies.filter(c => c.featured).length;
-    const stable = currencies.filter(c => c.isStable).length;
+    const featured = currencies.filter((c) => c.featured).length;
+    const stable = currencies.filter((c) => c.isStable).length;
     return { total, featured, stable };
   }, [currencies]);
   return (
@@ -84,7 +84,8 @@ export default function CurrencySelector({
                   <img
                     src={selectedCurrency.logo}
                     alt=""
-                    className="w-6 h-6 rounded-full shrink-0 object-cover" />
+                    className="w-6 h-6 rounded-full shrink-0 object-cover"
+                  />
                 )}
               </span>
               <span className="font-medium truncate">
@@ -108,7 +109,8 @@ export default function CurrencySelector({
         {/* Header with stats */}
         <div className="px-4 py-2 border-b bg-muted/30">
           <div className="text-xs text-muted-foreground">
-            {filtered.length} of {currencyStats.total} currencies • {currencyStats.featured} featured • {currencyStats.stable} stable
+            {filtered.length} of {currencyStats.total} currencies •{" "}
+            {currencyStats.featured} featured • {currencyStats.stable} stable
           </div>
         </div>
 
@@ -119,7 +121,7 @@ export default function CurrencySelector({
             <Input
               autoFocus
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search currency..."
               className="pl-10 pr-4 h-9 border-0 bg-background"
             />
@@ -137,7 +139,7 @@ export default function CurrencySelector({
             )}
             {filtered?.map((c, index) => (
               <CommandItem
-                key={c.ticker}
+                key={`${c.ticker}-${c.network}`}
                 onSelect={() => {
                   onValueChange(c.ticker);
                   setOpen(false);
@@ -152,7 +154,7 @@ export default function CurrencySelector({
                       <img
                         src={c.logo}
                         alt=""
-                        className="w-8 h-8 rounded-full shrink-0 object-cover border border-border/20" 
+                        className="w-8 h-8 rounded-full shrink-0 object-cover border border-border/20"
                         loading="lazy"
                       />
                     )}
@@ -171,7 +173,7 @@ export default function CurrencySelector({
                         </span>
                       )}
                     </div>
-                    {c.network && c.network !== 'mainnet' && (
+                    {c.network && c.network !== "mainnet" && (
                       <span className="text-xs text-muted-foreground truncate">
                         {c.network}
                       </span>

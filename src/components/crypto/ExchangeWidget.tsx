@@ -230,15 +230,14 @@ export function ExchangeWidget() {
     const fetchCurrencies = async () => {
       try {
         const currencies = await getAvailableCurrencies({
-          active: true,
-          flow: "standard",
-          buy: true,
-          sell: true,
+          // active: true,
+          // flow: "standard",
+          // buy: true,
+          // sell: true,
         });
 
         if (currencies) {
           setAllCurrencies(currencies);
-
           // Set initial selected currencies
           const btc = currencies.find((c) => c.ticker === "btc");
           const eth = currencies.find((c) => c.ticker === "eth");
@@ -569,12 +568,6 @@ export function ExchangeWidget() {
   const handleFromCurrencyChange = useCallback(
     (value: string) => {
       if (toCurrency === value) {
-        console.log(
-          "Currency conflict detected, swapping to currency:",
-          toCurrency,
-          "→",
-          fromCurrency
-        );
         setToCurrency(fromCurrency);
       }
       setFromCurrency(value);
@@ -918,8 +911,6 @@ export function ExchangeWidget() {
             },
           },
         });
-
-        console.log("Fiat transaction created:", fiatTransaction);
 
         if (fiatTransaction) {
           // For fiat transactions, we can show the redirect URL or transaction details

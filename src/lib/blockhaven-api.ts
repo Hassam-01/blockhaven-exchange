@@ -177,6 +177,7 @@ export interface CurrencyOptions {
 
 // BlockHeaven API Base URL
 const BLOCKHAVEN_API_BASE = `${API_CONFIG.BASE_URL}/api/blockhaven`;
+const BLOCKHAVEN_API_BASE_EXCHANGE = `${API_CONFIG.BASE_URL}/api/exchanges`;
 
 // ========================= BLOCKHAVEN API ENDPOINTS =========================
 
@@ -197,7 +198,8 @@ export async function getAvailableCurrencies(
     if (sell !== undefined) params.append("sell", String(sell));
 
     const response = await fetch(
-      `${BLOCKHAVEN_API_BASE}/currencies?${params.toString()}`,
+      `${BLOCKHAVEN_API_BASE_EXCHANGE}/currencies`,
+      // `http://localhost:3000/api/exchanges/currencies`,
       {
         headers: getHeaders(),
       }
@@ -223,7 +225,7 @@ export async function getAvailableCurrencies(
     const uniqueCurrencies = validCurrencies.reduce(
       (acc: ExchangeCurrency[], currency: ExchangeCurrency) => {
         const existingIndex = acc.findIndex(
-          (c) => c.ticker === currency.ticker
+          (c) => c.ticker === currency.ticker && c.network === currency.network
         );
         if (existingIndex === -1) {
           // Add new currency with color and logo
@@ -312,8 +314,9 @@ export async function getAvailablePairs(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.error || "Failed to fetch available pairs";
-      
+      const errorMessage =
+        errorData?.error || "Failed to fetch available pairs";
+
       toast({
         variant: "destructive",
         title: "Invalid Currency Pair",
@@ -362,8 +365,9 @@ export async function getMinimalExchangeAmount(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.error || "Failed to fetch minimal exchange amount";
-      
+      const errorMessage =
+        errorData?.error || "Failed to fetch minimal exchange amount";
+
       toast({
         variant: "destructive",
         title: "Invalid Currency Pair",
@@ -438,7 +442,9 @@ export async function getTransactionStatus(
 ): Promise<TransactionStatusResponse | null> {
   try {
     const response = await fetch(
-      `${BLOCKHAVEN_API_BASE}/transaction-status/${encodeURIComponent(transactionId)}`,
+      `${BLOCKHAVEN_API_BASE}/transaction-status/${encodeURIComponent(
+        transactionId
+      )}`,
       {
         headers: getHeaders(),
       }
@@ -555,14 +561,12 @@ export async function getExchangeRange(
     if (options?.fromNetwork) params.append("fromNetwork", options.fromNetwork);
     if (options?.toNetwork) params.append("toNetwork", options.toNetwork);
     if (options?.flow) params.append("flow", options.flow);
-    
     const response = await fetch(
       `${BLOCKHAVEN_API_BASE}/exchange-range?${params.toString()}`,
       {
         headers: getHeaders(),
       }
     );
-
     if (!response.ok) {
       throw new Error("Failed to fetch exchange range");
     }
@@ -594,8 +598,9 @@ export async function createFiatTransaction(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.error || "Failed to create fiat transaction";
-      
+      const errorMessage =
+        errorData?.error || "Failed to create fiat transaction";
+
       toast({
         variant: "destructive",
         title: "Transaction Error",
@@ -630,9 +635,13 @@ export async function getFiatMarketInfo(
     if (options?.toNetwork) params.append("toNetwork", options.toNetwork);
 
     const queryString = params.toString();
-    const url = queryString 
-      ? `${BLOCKHAVEN_API_BASE}/fiat-market-info/${encodeURIComponent(fromCurrency)}/${encodeURIComponent(toCurrency)}?${queryString}`
-      : `${BLOCKHAVEN_API_BASE}/fiat-market-info/${encodeURIComponent(fromCurrency)}/${encodeURIComponent(toCurrency)}`;
+    const url = queryString
+      ? `${BLOCKHAVEN_API_BASE}/fiat-market-info/${encodeURIComponent(
+          fromCurrency
+        )}/${encodeURIComponent(toCurrency)}?${queryString}`
+      : `${BLOCKHAVEN_API_BASE}/fiat-market-info/${encodeURIComponent(
+          fromCurrency
+        )}/${encodeURIComponent(toCurrency)}`;
 
     const response = await fetch(url, {
       headers: getHeaders(),
@@ -685,7 +694,9 @@ export async function getExchangeActions(
 ): Promise<ExchangeActionsResponse | null> {
   try {
     const response = await fetch(
-      `${BLOCKHAVEN_API_BASE}/exchange-actions/${encodeURIComponent(transactionId)}`,
+      `${BLOCKHAVEN_API_BASE}/exchange-actions/${encodeURIComponent(
+        transactionId
+      )}`,
       {
         headers: getHeaders(),
       }
@@ -729,7 +740,7 @@ export async function refundExchange(
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       const errorMessage = errorData?.error || "Failed to refund exchange";
-      
+
       toast({
         variant: "destructive",
         title: "Refund Error",
@@ -768,7 +779,7 @@ export async function continueExchange(
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       const errorMessage = errorData?.error || "Failed to continue exchange";
-      
+
       toast({
         variant: "destructive",
         title: "Continue Exchange Error",
@@ -794,7 +805,9 @@ export async function getFiatTransactionStatus(
 ): Promise<FiatTransactionStatusResponse | null> {
   try {
     const response = await fetch(
-      `${BLOCKHAVEN_API_BASE}/fiat-transaction-status/${encodeURIComponent(transactionId)}`,
+      `${BLOCKHAVEN_API_BASE}/fiat-transaction-status/${encodeURIComponent(
+        transactionId
+      )}`,
       {
         headers: getHeaders(),
       }
