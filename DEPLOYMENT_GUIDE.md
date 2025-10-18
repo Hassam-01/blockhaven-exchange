@@ -12,11 +12,23 @@
 1. Create `.env` file with production values:
 ```bash
 VITE_API_BASE_URL=https://your-api-domain.com
+VITE_MAINTENANCE_MODE=false
 ```
 
 2. Verify all environment variables are properly prefixed with `VITE_`
 
-### 🏗️ Build Process
+### 🛠️ Maintenance Mode
+To enable maintenance mode (shows maintenance page to all users):
+
+1. Set environment variable: `VITE_MAINTENANCE_MODE=true`
+2. Rebuild and redeploy the application
+3. To disable: Set `VITE_MAINTENANCE_MODE=false` and redeploy
+
+**For different deployment platforms:**
+
+- **Vercel**: Update environment variables in dashboard, redeploy
+- **Netlify**: Update environment variables in site settings, trigger new build
+- **AWS/Docker**: Update `.env` file and rebuild container/image
 ```bash
 # Install dependencies
 npm install
