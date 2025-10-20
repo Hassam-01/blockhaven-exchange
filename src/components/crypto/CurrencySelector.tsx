@@ -11,7 +11,8 @@ import { ExchangeCurrency } from "@/lib/blockhaven-exchange-api";
 
 interface Props {
   value: string;
-  onValueChange: (value: string) => void;
+  // Pass the full ExchangeCurrency on selection so callers can preserve network info
+  onValueChange: (value: ExchangeCurrency) => void;
   currencies: ExchangeCurrency[];
   selectedCurrency: ExchangeCurrency | null;
   placeholder?: string;
@@ -141,7 +142,8 @@ export default function CurrencySelector({
               <CommandItem
                 key={`${c.ticker}-${c.network}`}
                 onSelect={() => {
-                  onValueChange(c.ticker);
+                  // Pass the full currency object so the caller can set ticker + network
+                  onValueChange(c);
                   setOpen(false);
                   setSearch("");
                 }}

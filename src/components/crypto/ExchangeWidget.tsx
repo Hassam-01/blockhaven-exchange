@@ -73,8 +73,10 @@ import {
 
 export function ExchangeWidget() {
   const [activeTab, setActiveTab] = useState<"exchange">("exchange");
+  // Keep both ticker string and full selected currency object to preserve network
   const [fromCurrency, setFromCurrency] = useState("btc");
   const [toCurrency, setToCurrency] = useState("eth");
+  // selectedFromCurrency and selectedToCurrency already exist below - keep in sync
   const [fromAmount, setFromAmount] = useState("");
   const [toAmount, setToAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -291,17 +293,25 @@ export function ExchangeWidget() {
 
   // Update selected currency when fromCurrency changes
   useEffect(() => {
-    const currency = allCurrencies.find((c) => c.ticker === fromCurrency);
-    setSelectedFromCurrency(currency || null);
+    // Prefer existing selectedFromCurrency if it matches the ticker
+    let currency = selectedFromCurrency;
+    if (!currency || currency.ticker !== fromCurrency) {
+      currency = allCurrencies.find((c) => c.ticker === fromCurrency) || null;
+    }
+    setSelectedFromCurrency(currency);
     setRightColor(currency?.color || "");
-  }, [fromCurrency, allCurrencies]);
+  }, [fromCurrency, allCurrencies, selectedFromCurrency]);
 
   // Update selected currency when toCurrency changes
   useEffect(() => {
-    const currency = allCurrencies.find((c) => c.ticker === toCurrency);
-    setSelectedToCurrency(currency || null);
+    // Prefer existing selectedToCurrency if it matches the ticker
+    let currency = selectedToCurrency;
+    if (!currency || currency.ticker !== toCurrency) {
+      currency = allCurrencies.find((c) => c.ticker === toCurrency) || null;
+    }
+    setSelectedToCurrency(currency);
     setLeftColor(currency?.color || "");
-  }, [toCurrency, allCurrencies]);
+  }, [toCurrency, allCurrencies, selectedToCurrency]);
 
   // Close currency selector popovers when page scrolls
   useEffect(() => {
@@ -370,12 +380,14 @@ export function ExchangeWidget() {
       if (fromCurrency && toCurrency && allCurrencies.length > 0) {
         try {
           // Find current currency objects to get the correct network
-          const currentFromCurrency = allCurrencies.find(
-            (c) => c.ticker === fromCurrency
-          );
-          const currentToCurrency = allCurrencies.find(
-            (c) => c.ticker === toCurrency
-          );
+          const currentFromCurrency =
+            selectedFromCurrency && selectedFromCurrency.ticker === fromCurrency
+              ? selectedFromCurrency
+              : allCurrencies.find((c) => c.ticker === fromCurrency);
+          const currentToCurrency =
+            selectedToCurrency && selectedToCurrency.ticker === toCurrency
+              ? selectedToCurrency
+              : allCurrencies.find((c) => c.ticker === toCurrency);
 
           // const minResult = await getMinimalExchangeAmount(fromCurrency, toCurrency, {
           //   flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard'
@@ -402,7 +414,14 @@ export function ExchangeWidget() {
     };
 
     fetchAmountLimits();
-  }, [fromCurrency, toCurrency, exchangeType, allCurrencies]);
+  }, [
+    fromCurrency,
+    toCurrency,
+    exchangeType,
+    allCurrencies,
+    selectedFromCurrency,
+    selectedToCurrency,
+  ]);
 
   // Estimate amounts based on calculation type
   useEffect(() => {
@@ -461,12 +480,14 @@ export function ExchangeWidget() {
       setIsLoading(true);
       try {
         // Find current currency objects to get the correct network
-        const currentFromCurrency = allCurrencies.find(
-          (c) => c.ticker === fromCurrency
-        );
-        const currentToCurrency = allCurrencies.find(
-          (c) => c.ticker === toCurrency
-        );
+        const currentFromCurrency =
+          selectedFromCurrency && selectedFromCurrency.ticker === fromCurrency
+            ? selectedFromCurrency
+            : allCurrencies.find((c) => c.ticker === fromCurrency);
+        const currentToCurrency =
+          selectedToCurrency && selectedToCurrency.ticker === toCurrency
+            ? selectedToCurrency
+            : allCurrencies.find((c) => c.ticker === toCurrency);
 
         // Regular crypto-to-crypto exchange
         const result = await getEstimatedExchangeAmount(
@@ -551,6 +572,8 @@ export function ExchangeWidget() {
     allCurrencies,
     minAmount,
     maxAmount,
+    selectedFromCurrency,
+    selectedToCurrency,
   ]);
 
   const handleSwapCurrencies = useCallback(() => {
@@ -566,11 +589,14 @@ export function ExchangeWidget() {
   }, [fromCurrency, toCurrency, fromAmount, toAmount, calculationType]);
 
   const handleFromCurrencyChange = useCallback(
-    (value: string) => {
-      if (toCurrency === value) {
+    (currency: ExchangeCurrency) => {
+      // If the selected toCurrency has the same ticker but different network, avoid collision
+      if (toCurrency === currency.ticker) {
+        // swap the existing toCurrency ticker into fromCurrency
         setToCurrency(fromCurrency);
       }
-      setFromCurrency(value);
+      setFromCurrency(currency.ticker);
+      setSelectedFromCurrency(currency);
       // Clear amounts when currency changes
       setFromAmount("");
       setToAmount("");
@@ -579,11 +605,12 @@ export function ExchangeWidget() {
   );
 
   const handleToCurrencyChange = useCallback(
-    (value: string) => {
-      if (fromCurrency === value) {
+    (currency: ExchangeCurrency) => {
+      if (fromCurrency === currency.ticker) {
         setFromCurrency(toCurrency);
       }
-      setToCurrency(value);
+      setToCurrency(currency.ticker);
+      setSelectedToCurrency(currency);
       // Clear amounts when currency changes
       setFromAmount("");
       setToAmount("");
@@ -621,12 +648,14 @@ export function ExchangeWidget() {
 
     try {
       // Find current currency objects to get the correct network
-      const currentFromCurrency = allCurrencies.find(
-        (c) => c.ticker === fromCurrency
-      );
-      const currentToCurrency = allCurrencies.find(
-        (c) => c.ticker === toCurrency
-      );
+      const currentFromCurrency =
+        selectedFromCurrency && selectedFromCurrency.ticker === fromCurrency
+          ? selectedFromCurrency
+          : allCurrencies.find((c) => c.ticker === fromCurrency);
+      const currentToCurrency =
+        selectedToCurrency && selectedToCurrency.ticker === toCurrency
+          ? selectedToCurrency
+          : allCurrencies.find((c) => c.ticker === toCurrency);
 
       // Validate deposit address
       const depositValidation = await validateAddress(
