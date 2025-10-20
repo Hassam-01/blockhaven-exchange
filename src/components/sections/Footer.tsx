@@ -135,7 +135,7 @@ export function Footer() {
             © {currentYear} BlockHaven. All rights reserved. | Cryptocurrency
             exchange platform built with security and trust in mind.
           </p>
-          <p className="text-sm">
+          {/* <p className="text-sm">
             Developed by{" "}
             <a
               href="https://sifarteq.com"
@@ -145,7 +145,7 @@ export function Footer() {
             >
               SifarTeq
             </a>
-          </p>
+          </p> */}
         </div>
       </div>
     </footer>

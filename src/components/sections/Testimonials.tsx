@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Star, Plus, Edit, Trash2 } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Star,
+  Plus,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -65,7 +72,8 @@ export function Testimonials() {
     };
 
     window.addEventListener("auth-state-changed", handleAuthChange);
-    return () => window.removeEventListener("auth-state-changed", handleAuthChange);
+    return () =>
+      window.removeEventListener("auth-state-changed", handleAuthChange);
   }, []);
 
   // Load public testimonials
@@ -225,6 +233,45 @@ export function Testimonials() {
     );
   };
 
+  // Scroll controls for horizontal testimonials list
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    updateScrollButtons();
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const onScroll = () => updateScrollButtons();
+    el.addEventListener("scroll", onScroll, { passive: true });
+
+    const ro = new ResizeObserver(() => updateScrollButtons());
+    ro.observe(el);
+
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
+  }, [testimonials]);
+
+  const scrollByPage = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = Math.max(el.clientWidth * 0.8, 240);
+    el.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
+
   if (loading) {
     return (
       <section className="py-16 relative overflow-hidden section-bg-alt">
@@ -274,171 +321,200 @@ export function Testimonials() {
         )}
 
         {testimonials.length > 0 || myTestimonial ? (
-          <div
-            className="flex gap-6 overflow-x-auto pb-6 -mx-4 px-4 snap-x snap-mandatory"
-            role="list"
-            aria-label="Testimonials"
-          >
-            {/* User's own testimonial (if exists) */}
-            {myTestimonial && (
-              <Card
-                role="listitem"
-                className="h-full min-h-[280px] relative border-primary/50 flex-shrink-0 w-80 snap-start"
-              >
-                {/* Edit/Delete actions */}
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <Button
-                    onClick={openEditDialog}
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-primary/10"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={handleDelete}
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+          <div className="relative">
+            {/* Left/Right controls */}
+            <button
+              aria-hidden={!canScrollLeft}
+              aria-label="Scroll testimonials left"
+              onClick={() => scrollByPage("left")}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/60 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-opacity ${
+                canScrollLeft ? "opacity-100" : "opacity-30 pointer-events-none"
+              }`}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
 
-                {/* Status badge */}
-                <div className="absolute top-2 left-2">
-                  <Badge
-                    variant={
-                      myTestimonial.is_approved ? "default" : "secondary"
-                    }
-                    className="text-xs"
-                  >
-                    {myTestimonial.is_approved ? "Approved" : "Pending"}
-                  </Badge>
-                </div>
-
-                <CardContent className="p-6 flex flex-col h-full pt-12">
-                  {/* Background quote image */}
-                  <div
-                    className="absolute inset-0 bg-no-repeat bg-center bg-contain opacity-5 pointer-events-none"
-                    style={{
-                      backgroundImage: "url('/quote.png')",
-                      backgroundSize: "120px 120px",
-                    }}
-                  />
-
-                  {/* Header with name and date */}
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="text-sm font-semibold">
-                      {myTestimonial.user
-                        ? `${myTestimonial.user.first_name} ${myTestimonial.user.last_name}`
-                        : "You"}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(myTestimonial.created_at).toLocaleDateString(
-                        "en-GB",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )}
-                    </span>
+            <div
+              ref={scrollRef}
+              className="flex gap-6 overflow-x-auto pb-6 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar"
+              role="list"
+              aria-label="Testimonials"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {/* User's own testimonial (if exists) */}
+              {myTestimonial && (
+                <Card
+                  role="listitem"
+                  className="h-full min-h-[280px] relative border-primary/50 flex-shrink-0 w-80 snap-start"
+                >
+                  {/* Edit/Delete actions */}
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <Button
+                      onClick={openEditDialog}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-primary/10"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={handleDelete}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
 
-                  {/* Main content container - vertically centered */}
-                  <div className="flex flex-col justify-between flex-1">
-                    {/* Quote text - centered in available space */}
-                    <div className="flex items-center justify-center flex-1 w-full">
-                      <blockquote className="text-lg text-center leading-relaxed px-2 font-serif italic text-slate-700 dark:text-slate-300">
-                        "{myTestimonial.text}"
-                      </blockquote>
+                  {/* Status badge */}
+                  <div className="absolute top-2 left-2">
+                    <Badge
+                      variant={
+                        myTestimonial.is_approved ? "default" : "secondary"
+                      }
+                      className="text-xs"
+                    >
+                      {myTestimonial.is_approved ? "Approved" : "Pending"}
+                    </Badge>
+                  </div>
+
+                  <CardContent className="p-6 flex flex-col h-full pt-12">
+                    {/* Background quote image */}
+                    <div
+                      className="absolute inset-0 bg-no-repeat bg-center bg-contain opacity-5 pointer-events-none"
+                      style={{
+                        backgroundImage: "url('/quote.png')",
+                        backgroundSize: "120px 120px",
+                      }}
+                    />
+
+                    {/* Header with name and date */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="text-sm font-semibold">
+                        {myTestimonial.user
+                          ? `${myTestimonial.user.first_name} ${myTestimonial.user.last_name}`
+                          : "You"}
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(myTestimonial.created_at).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
+                      </span>
                     </div>
 
-                    {/* Stars at bottom */}
-                    <div className="flex justify-center w-full mt-4">
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`w-10 h-10 ${
-                              star <= myTestimonial.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
+                    {/* Main content container - vertically centered */}
+                    <div className="flex flex-col justify-between flex-1">
+                      {/* Quote text - centered in available space */}
+                      <div className="flex items-center justify-center flex-1 w-full">
+                        <blockquote className="text-lg text-center leading-relaxed px-2 font-serif italic text-slate-700 dark:text-slate-300">
+                          "{myTestimonial.text}"
+                        </blockquote>
+                      </div>
+
+                      {/* Stars at bottom */}
+                      <div className="flex justify-center w-full mt-4">
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-10 h-10 ${
+                                star <= myTestimonial.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                  </CardContent>
+                </Card>
+              )}
 
-            {/* Public testimonials */}
-            {testimonials.map((testimonial) => (
-              <Card
-                key={testimonial.id}
-                role="listitem"
-                className="h-full min-h-[280px] flex-shrink-0 w-80 snap-start"
-              >
-                <CardContent className="p-6 flex flex-col h-full min-h-[280px]">
-                  {/* Background quote image */}
-                  <div
-                    className="absolute inset-0 bg-no-repeat bg-center bg-contain opacity-5 pointer-events-none top-1/3"
-                    style={{
-                      backgroundImage: "url('/quote.png')",
-                      backgroundSize: "220px 220px",
-                    }}
-                  />
+              {/* Public testimonials */}
+              {testimonials.map((testimonial) => (
+                <Card
+                  key={testimonial.id}
+                  role="listitem"
+                  className="h-full min-h-[280px] relative flex-shrink-0 w-80 snap-start"
+                >
+                  <CardContent className="p-6 flex flex-col h-full min-h-[280px] ">
+                    {/* Background quote image */}
+                    <div
+                      className="absolute inset-0 bg-no-repeat bg-center bg-contain opacity-5 pointer-events-none"
+                      style={{
+                        backgroundImage: "url('/quote.png')",
+                        backgroundSize: "120px 120px",
+                      }}
+                    />
 
-                  {/* Header with name and date */}
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="text-sm font-semibold">
-                      {testimonial.user
-                        ? `${testimonial.user.first_name} ${testimonial.user.last_name}`
-                        : "Anonymous User"}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(testimonial.created_at).toLocaleDateString(
-                        "en-GB",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )}
-                    </span>
-                  </div>
-
-                  {/* Main content container - vertically centered */}
-                  <div className="flex flex-col justify-between flex-1">
-                    {/* Quote text - centered in available space */}
-                    <div className="flex items-center justify-center flex-1 w-full">
-                      <blockquote className="text-lg text-center leading-relaxed px-2 font-serif italic text-slate-700 dark:text-slate-300">
-                        "{testimonial.text}"
-                      </blockquote>
+                    {/* Header with name and date */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="text-sm font-semibold">
+                        {testimonial.user
+                          ? `${testimonial.user.first_name} ${testimonial.user.last_name}`
+                          : "Anonymous User"}
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(testimonial.created_at).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
+                      </span>
                     </div>
 
-                    {/* Stars at bottom */}
-                    <div className="flex justify-center w-full mt-4">
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`w-6 h-6 ${
-                              star <= testimonial.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
+                    {/* Main content container - vertically centered */}
+                    <div className="flex flex-col justify-between flex-1">
+                      {/* Quote text - centered in available space */}
+                      <div className="flex items-center justify-center flex-1 w-full">
+                        <blockquote className="text-lg text-center leading-relaxed px-2 font-serif italic text-slate-700 dark:text-slate-300">
+                          "{testimonial.text}"
+                        </blockquote>
+                      </div>
+
+                      {/* Stars at bottom */}
+                      <div className="flex justify-center w-full mt-4">
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-6 h-6 ${
+                                star <= testimonial.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <button
+              aria-hidden={!canScrollRight}
+              aria-label="Scroll testimonials right"
+              onClick={() => scrollByPage("right")}
+              className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/60 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-opacity ${
+                canScrollRight
+                  ? "opacity-100"
+                  : "opacity-30 pointer-events-none"
+              }`}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         ) : (
           <div className="text-center py-12">

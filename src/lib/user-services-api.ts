@@ -471,10 +471,25 @@ export const createTestimonial = async (
 export const createPublicTestimonial = async (
   data: CreateTestimonialRequest
 ): Promise<Testimonial> => {
-  return apiCall<Testimonial>(API_CONFIG.ENDPOINTS.TESTIMONIALS.PUBLIC, {
-    method: HTTP_METHODS.POST,
-    body: JSON.stringify(data),
-  });
+  // Try the public endpoint first. If the server doesn't expose it (404),
+  // fall back to posting to the base testimonials endpoint without auth.
+  try {
+    return await apiCall<Testimonial>(API_CONFIG.ENDPOINTS.TESTIMONIALS.PUBLIC, {
+      method: HTTP_METHODS.POST,
+      body: JSON.stringify(data),
+    });
+  } catch (err: unknown) {
+    // If the route doesn't exist (404), try the base endpoint without auth.
+    if (err instanceof Error && /404|not found/i.test(err.message)) {
+      return apiCall<Testimonial>(API_CONFIG.ENDPOINTS.TESTIMONIALS.BASE, {
+        method: HTTP_METHODS.POST,
+        body: JSON.stringify(data),
+      });
+    }
+
+    // rethrow other errors
+    throw err;
+  }
 };
 
 export const updateTestimonial = async (
