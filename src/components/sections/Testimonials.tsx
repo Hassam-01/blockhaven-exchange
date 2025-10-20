@@ -272,6 +272,9 @@ export function Testimonials() {
     });
   };
 
+  // Total visible testimonial items (public + user's own if exists)
+  const totalItems = (testimonials?.length || 0) + (myTestimonial ? 1 : 0);
+
   if (loading) {
     return (
       <section className="py-16 relative overflow-hidden section-bg-alt">
@@ -336,7 +339,11 @@ export function Testimonials() {
 
             <div
               ref={scrollRef}
-              className="flex gap-6 overflow-x-auto pb-6 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar"
+              className={
+                `flex gap-6 overflow-x-auto pb-6 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar justify-center ` +
+                // When there's exactly one item, center it horizontally
+                (totalItems === 1 ? "justify-center" : "")
+              }
               role="list"
               aria-label="Testimonials"
               style={{ WebkitOverflowScrolling: "touch" }}
