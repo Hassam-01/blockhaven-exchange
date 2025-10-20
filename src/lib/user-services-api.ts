@@ -467,6 +467,16 @@ export const createTestimonial = async (
   });
 };
 
+// Public create testimonial (allows anonymous submissions)
+export const createPublicTestimonial = async (
+  data: CreateTestimonialRequest
+): Promise<Testimonial> => {
+  return apiCall<Testimonial>(API_CONFIG.ENDPOINTS.TESTIMONIALS.PUBLIC, {
+    method: HTTP_METHODS.POST,
+    body: JSON.stringify(data),
+  });
+};
+
 export const updateTestimonial = async (
   token: string,
   id: string,

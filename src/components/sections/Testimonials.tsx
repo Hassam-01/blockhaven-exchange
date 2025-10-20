@@ -23,6 +23,7 @@ import {
   getPublicTestimonials,
   getMyTestimonial,
   createTestimonial,
+  createPublicTestimonial,
   updateTestimonial,
   deleteTestimonial,
   getCurrentAuthToken,
@@ -48,9 +49,24 @@ export function Testimonials() {
   const [rating, setRating] = useState(5);
   const [text, setText] = useState("");
 
-  // Check if user is logged in
-  const authToken = getCurrentAuthToken();
-  const isLoggedIn = isAuthenticated();
+  // Reactive auth state (listen to global auth-state-changed events)
+  const [authToken, setAuthToken] = useState<string | null>(() =>
+    getCurrentAuthToken()
+  );
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() =>
+    isAuthenticated()
+  );
+
+  // Listen for auth state changes triggered by login/logout or token expiration
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setAuthToken(getCurrentAuthToken());
+      setIsLoggedIn(isAuthenticated());
+    };
+
+    window.addEventListener("auth-state-changed", handleAuthChange);
+    return () => window.removeEventListener("auth-state-changed", handleAuthChange);
+  }, []);
 
   // Load public testimonials
   const loadTestimonials = async () => {
@@ -100,10 +116,9 @@ export function Testimonials() {
     }
   }, [error, success]);
 
-  // Handle form submission
+  // Handle form submission (supports anonymous submissions)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authToken) return;
 
     setSubmitting(true);
     setError(null);
@@ -114,11 +129,19 @@ export function Testimonials() {
         text: text.trim(),
       };
 
-      if (isEditing && myTestimonial) {
+      if (isEditing && myTestimonial && authToken) {
+        // Editing requires authentication
         await updateTestimonial(authToken, myTestimonial.id, data);
         setSuccess("Testimonial updated successfully!");
       } else {
-        await createTestimonial(authToken, data as CreateTestimonialRequest);
+        // Create: prefer authenticated endpoint if token exists, otherwise public
+        if (authToken) {
+          await createTestimonial(authToken, data as CreateTestimonialRequest);
+        } else {
+          // Use public create endpoint for anonymous users
+          await createPublicTestimonial(data as CreateTestimonialRequest);
+        }
+
         setSuccess(
           "Testimonial submitted successfully! It will be reviewed before being published."
         );
@@ -251,10 +274,17 @@ export function Testimonials() {
         )}
 
         {testimonials.length > 0 || myTestimonial ? (
-          <div className="flex flex-wrap justify-center gap-6">
+          <div
+            className="flex gap-6 overflow-x-auto pb-6 -mx-4 px-4 snap-x snap-mandatory"
+            role="list"
+            aria-label="Testimonials"
+          >
             {/* User's own testimonial (if exists) */}
             {myTestimonial && (
-              <Card className="h-full min-h-[280px] relative border-primary/50 w-full max-w-sm mx-auto">
+              <Card
+                role="listitem"
+                className="h-full min-h-[280px] relative border-primary/50 flex-shrink-0 w-80 snap-start"
+              >
                 {/* Edit/Delete actions */}
                 <div className="absolute top-2 right-2 flex gap-1">
                   <Button
@@ -349,7 +379,8 @@ export function Testimonials() {
             {testimonials.map((testimonial) => (
               <Card
                 key={testimonial.id}
-                className="h-full min-h-[280px] w-full max-w-sm mx-auto"
+                role="listitem"
+                className="h-full min-h-[280px] flex-shrink-0 w-80 snap-start"
               >
                 <CardContent className="p-6 flex flex-col h-full min-h-[280px]">
                   {/* Background quote image */}
@@ -414,7 +445,7 @@ export function Testimonials() {
             <p className="text-muted-foreground">
               No testimonials available yet.
             </p>
-            {isLoggedIn && !myTestimonial && (
+            {!myTestimonial && (
               <Button onClick={openCreateDialog} className="mt-4">
                 <Plus className="w-4 h-4 mr-2" />
                 Be the First to Share Your Experience
@@ -424,7 +455,7 @@ export function Testimonials() {
         )}
 
         {/* Add Testimonial Button - Only show if logged in and no testimonial exists */}
-        {isLoggedIn && !myTestimonial && testimonials.length > 0 && (
+        {!myTestimonial && testimonials.length > 0 && (
           <div className="mt-8 text-center">
             <Button onClick={openCreateDialog} size="lg">
               <Plus className="w-4 h-4 mr-2" />
