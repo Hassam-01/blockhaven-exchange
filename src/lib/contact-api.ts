@@ -18,9 +18,14 @@ export interface ContactResponse {
  */
 export const submitContactForm = async (formData: ContactFormData): Promise<ContactResponse> => {
   try {
+    const headers = {
+      "Content-Type": "application/json",
+      ...getHeaders(),
+    } as Record<string, string>;
+
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CONTACT}`, {
       method: HTTP_METHODS.POST,
-      headers: getHeaders(),
+      headers,
       body: JSON.stringify(formData),
     });
 

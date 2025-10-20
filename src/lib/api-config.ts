@@ -68,14 +68,10 @@ export const HTTP_METHODS = {
 
 // Common headers
 export const getHeaders = (token?: string): HeadersInit => {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-  
+  const headers: HeadersInit = {};
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
-  
   return headers;
 };
 

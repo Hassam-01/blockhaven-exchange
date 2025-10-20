@@ -24,9 +24,14 @@ export const submitChatQuery = async (queryData: ChatQueryData): Promise<ChatRes
       message: queryData.query
     };
 
+    const headers = {
+      "Content-Type": "application/json",
+      ...getHeaders(),
+    } as Record<string, string>;
+
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CONTACT}`, {
       method: HTTP_METHODS.POST,
-      headers: getHeaders(),
+      headers,
       body: JSON.stringify(contactData),
     });
 

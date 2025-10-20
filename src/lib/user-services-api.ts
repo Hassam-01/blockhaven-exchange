@@ -226,12 +226,26 @@ const apiCall = async <T>(
   options: RequestInit = {}
 ): Promise<T> => {
   const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+  // Build headers: only set Content-Type when there is a body to send.
+  const defaultHeaders: Record<string, string> = {};
+  // If body is present and it's not FormData, assume JSON
+  if (options.body !== undefined && !(options.body instanceof FormData)) {
+    defaultHeaders["Content-Type"] = "application/json";
+  }
+
+  const combinedHeaders: Record<string, string> = {
+    ...defaultHeaders,
+    ...(options.headers as Record<string, string> | undefined),
+  };
+
+  // Defensive: if there's no body, ensure Content-Type is not present
+  if (options.body === undefined && "Content-Type" in combinedHeaders) {
+    delete combinedHeaders["Content-Type"];
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers: combinedHeaders,
   });
 
   if (!response.ok) {
