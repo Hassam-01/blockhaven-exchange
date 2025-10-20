@@ -65,7 +65,12 @@ export async function createExchangeTransaction(
 ): Promise<CreateTransactionResponse | null> {
   try {
     // Prepare headers for backend request (with or without token)
-    const headers = getHeaders();
+    // Ensure JSON content type so the backend can parse the request body
+    const headers = {
+      ...getHeaders(),
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    } as HeadersInit;
 
     // Add user IP to the request body if provided
     const requestBody = userIp ? { ...body, userIp } : body;

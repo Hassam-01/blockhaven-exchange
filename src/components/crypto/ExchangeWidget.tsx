@@ -1344,29 +1344,31 @@ export function ExchangeWidget() {
                     </Button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Memo ID:
-                  </label>
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                    <code className="flex-1 text-sm font-mono break-all">
-                      {currentTransaction.payinExtraId}
-                    </code>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        handleCopyAddress(currentTransaction.payinExtraId)
-                      }
-                    >
-                      {copiedAddress === currentTransaction.payinExtraId ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
+                {currentTransaction.payinExtraId && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Memo ID:
+                    </label>
+                    <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                      <code className="flex-1 text-sm font-mono break-all">
+                        {currentTransaction.payinExtraId}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          handleCopyAddress(currentTransaction.payinExtraId)
+                        }
+                      >
+                        {copiedAddress === currentTransaction.payinExtraId ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
