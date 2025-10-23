@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   ArrowUpDown,
   Zap,
@@ -70,6 +70,7 @@ import {
   ExchangeCurrency,
   FiatCurrency,
 } from "@/const/types";
+import type { ExchangeRange } from "@/const/types";
 
 export function ExchangeWidget() {
   const [activeTab, setActiveTab] = useState<"exchange">("exchange");
@@ -132,6 +133,9 @@ export function ExchangeWidget() {
   const [toCurrencyPopoverOpen, setToCurrencyPopoverOpen] = useState(false);
 
   const { toast } = useToast();
+  // In-memory cache for exchange ranges during the session
+  const rangeCacheRef = useRef<Map<string, ExchangeRange | null>>(new Map());
+  const rangeAbortControllerRef = useRef<AbortController | null>(null);
 
   // Memoize filtered currencies for better performance - now shows ALL available currencies
   const filteredCurrencies = useMemo(() => {
@@ -392,11 +396,43 @@ export function ExchangeWidget() {
           // const minResult = await getMinimalExchangeAmount(fromCurrency, toCurrency, {
           //   flow: exchangeType === 'fixed' ? 'fixed-rate' : 'standard'
           // });
+          // Build cache key
+          const flow = exchangeType === "fixed" ? "fixed-rate" : "standard";
+          const key = `${fromCurrency}|${toCurrency}|${flow}|${currentFromCurrency?.network || ''}|${currentToCurrency?.network || ''}`;
+
+          // If cached, set immediately
+          if (rangeCacheRef.current.has(key)) {
+            const cached = rangeCacheRef.current.get(key) as ExchangeRange | null;
+            if (!cached) {
+              setMinAmount("");
+              setMaxAmount("");
+            } else {
+              setMinAmount(typeof cached.minAmount === 'number' ? cached.minAmount.toString() : "");
+              setMaxAmount(typeof cached.maxAmount === 'number' ? String(cached.maxAmount) : "");
+            }
+          }
+
+          // Cancel any previous in-flight request
+          if (rangeAbortControllerRef.current) {
+            // Abort previous controller; ignore any errors thrown by abort()
+            try {
+              rangeAbortControllerRef.current.abort();
+            } catch (e) {
+              // ignore
+            }
+          }
+          const controller = new AbortController();
+          rangeAbortControllerRef.current = controller;
+
           const range = await getExchangeRange(fromCurrency, toCurrency, {
-            flow: exchangeType === "fixed" ? "fixed-rate" : "standard",
+            flow,
             fromNetwork: currentFromCurrency?.network || undefined,
             toNetwork: currentToCurrency?.network || undefined,
+            signal: controller.signal,
           });
+
+          // store in cache (including null responses to avoid repeat calls)
+          rangeCacheRef.current.set(key, range ?? null);
 
           // If API returned no range (null/undefined), clear previous values
           if (!range) {
@@ -456,6 +492,14 @@ export function ExchangeWidget() {
           setMinAmount(typeof minVal === "number" && !isNaN(minVal) ? minVal.toString() : "");
           setMaxAmount(typeof maxVal === "number" && !isNaN(maxVal) ? maxVal.toString() : "");
         } catch (error) {
+          // If the fetch was aborted (user changed currency quickly), don't show a toast
+          if (error instanceof Error) {
+            const errAny = error as unknown as Record<string, unknown>;
+            const isAbort =
+              error.name === "AbortError" || errAny["code"] === "ERR_ABORTED";
+            if (isAbort) return;
+          }
+
           let message = "Failed to fetch amount limits";
           if (error instanceof Error) {
             message = error.message;

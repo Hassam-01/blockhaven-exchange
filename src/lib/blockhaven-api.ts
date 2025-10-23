@@ -550,6 +550,7 @@ export async function getExchangeRange(
     fromNetwork?: string;
     toNetwork?: string;
     flow?: "standard" | "fixed-rate";
+    signal?: AbortSignal;
   }
 ): Promise<ExchangeRange | null> {
   try {
@@ -565,6 +566,7 @@ export async function getExchangeRange(
       `${BLOCKHAVEN_API_BASE}/exchange-range?${params.toString()}`,
       {
         headers: getHeaders(),
+        signal: options?.signal,
       }
     );
 
