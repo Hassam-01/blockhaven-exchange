@@ -567,15 +567,34 @@ export async function getExchangeRange(
         headers: getHeaders(),
       }
     );
+
     if (!response.ok) {
-      throw new Error("Failed to fetch exchange range");
+      const errorData = await response.json().catch(() => null);
+      // Prefer structured server message: { success: false, error: { message: '...' } }
+      let errorMessage = "Failed to fetch exchange range";
+      if (errorData) {
+        if (
+          typeof errorData.error === "object" &&
+          errorData.error !== null &&
+          typeof errorData.error.message === "string"
+        ) {
+          errorMessage = errorData.error.message;
+        } else if (typeof errorData.error === "string") {
+          errorMessage = errorData.error;
+        } else if (typeof errorData.message === "string") {
+          errorMessage = errorData.message;
+        }
+      }
+
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
     return result.data || result;
   } catch (error) {
     console.error("Error fetching exchange range:", error);
-    return null;
+    // Re-throw so callers can handle and display the server message
+    throw error;
   }
 }
 
@@ -704,14 +723,14 @@ export async function getExchangeActions(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      console.error("Failed to fetch exchange actions:", errorData);
+      // console.error("Failed to fetch exchange actions:", errorData);
       throw new Error("Failed to fetch exchange actions");
     }
 
     const result = await response.json();
     return result.data || result;
   } catch (error) {
-    console.error("Error fetching exchange actions:", error);
+    // console.error("Error fetching exchange actions:", error);
     return null;
   }
 }
@@ -752,7 +771,7 @@ export async function refundExchange(
     const result = await response.json();
     return result.data || result;
   } catch (error) {
-    console.error("Error refunding exchange:", error);
+    // console.error("Error refunding exchange:", error);
     return null;
   }
 }

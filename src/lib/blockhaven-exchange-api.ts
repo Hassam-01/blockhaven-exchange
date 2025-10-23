@@ -110,7 +110,7 @@ export async function createExchangeTransaction(
 
     return transactionData;
   } catch (error) {
-    console.error("Error creating exchange transaction:", error);
+    // console.error("Error creating exchange transaction:", error);
 
     // Only show toast if it hasn't been shown already
     if (
@@ -153,7 +153,7 @@ export async function validateAddress(
     const result = await response.json();
     return result.data || result;
   } catch (error) {
-    console.error("Error validating address:", error);
+    // console.error("Error validating address:", error);
     return null;
   }
 }
@@ -173,14 +173,14 @@ export async function getFiatCurrencies(): Promise<FiatCurrency[] | null> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      console.error("Failed to fetch fiat currencies:", errorData);
+      // console.error("Failed to fetch fiat currencies:", errorData);
       throw new Error("Failed to fetch fiat currencies");
     }
 
     const result = await response.json();
     return result.data || result;
   } catch (error) {
-    console.error("Error fetching fiat currencies:", error);
+    // console.error("Error fetching fiat currencies:", error);
     return null;
   }
 }

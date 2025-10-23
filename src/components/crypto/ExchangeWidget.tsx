@@ -397,18 +397,84 @@ export function ExchangeWidget() {
             fromNetwork: currentFromCurrency?.network || undefined,
             toNetwork: currentToCurrency?.network || undefined,
           });
-          if (range) {
-            setMinAmount(range.minAmount.toString());
-          } else {
+
+          // If API returned no range (null/undefined), clear previous values
+          if (!range) {
             setMinAmount("");
-          }
-          if (range.maxAmount) {
-            setMaxAmount(range.maxAmount.toString());
-          } else {
             setMaxAmount("");
+            return;
           }
+
+          // Handle structured server error responses that may come back with success:false
+          // `range` may be a structured response (e.g. { success: false, error: { message } })
+          const hasStructuredError =
+            typeof range === "object" &&
+            range !== null &&
+            ("success" in range || "error" in range || "message" in range);
+
+          if (hasStructuredError) {
+            const obj = range as Record<string, unknown>;
+            if (obj["success"] === false && obj["error"]) {
+              const err = obj["error"];
+              let serverMessage = "Pair is not available for the selected flow";
+
+              if (typeof err === "string") {
+                serverMessage = err;
+              } else if (
+                typeof err === "object" &&
+                err !== null &&
+                typeof (err as Record<string, unknown>)["message"] === "string"
+              ) {
+                serverMessage = (err as Record<string, unknown>)["message"] as string;
+              } else if (typeof obj["message"] === "string") {
+                serverMessage = obj["message"] as string;
+              }
+
+              toast({
+                title: "Amount Limits Error",
+                description: serverMessage,
+                variant: "destructive",
+              });
+
+              setMinAmount("");
+              setMaxAmount("");
+              return;
+            }
+          }
+
+          // Safely set min/max only when numeric values are provided by the API
+          const rangeObj = range as unknown as Record<string, unknown>;
+          const minVal =
+            typeof rangeObj["minAmount"] === "number"
+              ? (rangeObj["minAmount"] as number)
+              : undefined;
+          const maxVal =
+            typeof rangeObj["maxAmount"] === "number"
+              ? (rangeObj["maxAmount"] as number)
+              : undefined;
+
+          setMinAmount(typeof minVal === "number" && !isNaN(minVal) ? minVal.toString() : "");
+          setMaxAmount(typeof maxVal === "number" && !isNaN(maxVal) ? maxVal.toString() : "");
         } catch (error) {
-          // Error fetching amount limits - will use defaults
+          let message = "Failed to fetch amount limits";
+          if (error instanceof Error) {
+            message = error.message;
+          } else if (typeof error === "object" && error !== null) {
+            const errObj = error as Record<string, unknown>;
+            if (typeof errObj["message"] === "string") {
+              message = errObj["message"] as string;
+            }
+          }
+
+          toast({
+            title: "Amount Limits Error",
+            description: message,
+            variant: "destructive",
+          });
+
+          // Clear previous min/max so stale values don't persist
+          setMinAmount("");
+          setMaxAmount("");
         }
       }
     };
@@ -421,6 +487,7 @@ export function ExchangeWidget() {
     allCurrencies,
     selectedFromCurrency,
     selectedToCurrency,
+    toast,
   ]);
 
   // Estimate amounts based on calculation type
@@ -783,7 +850,7 @@ export function ExchangeWidget() {
               throw new Error("Failed to get new fixed rate");
             }
           } catch (error) {
-            console.error("Error getting new fixed rate:", error);
+            // console.error("Error getting new fixed rate:", error);
             toast({
               title: "Rate Refresh Failed",
               description:
@@ -840,7 +907,7 @@ export function ExchangeWidget() {
           // throw new Error("Failed to create transaction");
         }
       } catch (error) {
-        console.error("Transaction creation error:");
+        // console.error("Transaction creation error:");
         toast({
           title: "Order Failed",
           description: "Failed to create exchange order. Please try again.",
@@ -956,7 +1023,7 @@ export function ExchangeWidget() {
           throw new Error("Failed to create fiat transaction");
         }
       } catch (error) {
-        console.error("Fiat transaction creation error:", error);
+        // console.error("Fiat transaction creation error:", error);
         toast({
           title: `${type === "buy" ? "Buy" : "Sell"} Order Failed`,
           description: `Failed to create ${type} order. Please try again.`,
